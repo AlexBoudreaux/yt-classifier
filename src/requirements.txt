@@ -1,0 +1,8 @@
+rich
+supabase
+openai==0.28.0
+google-api-python-client
+youtube-transcript-api
+google-auth-oauthlib
+google-auth
+selenium
