@@ -102,7 +102,7 @@ def convert_data(input_file: str, output_file: str):
     print(f"Total samples converted: {len(converted_data)}")
 
 if __name__ == "__main__":
-    input_file = "path/to/your/old_format.jsonl"
-    output_file = "path/to/your/new_format.jsonl"
+    input_file = "./training-data-all_8-14.jsonl"
+    output_file = "./training-data-new-all_8-15.jsonl"
     
     convert_data(input_file, output_file)
