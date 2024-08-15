@@ -16,6 +16,16 @@ def write_jsonl(data: List[Dict], file_path: str):
 def convert_format(old_format: Dict) -> Dict:
     """Convert old format to new format."""
     old_user_content = json.loads(old_format['messages'][1]['content'])
+    old_classification = old_format['messages'][2]['content'].strip()
+
+    # Skip "Late Night Jammers" classification
+    if old_classification == "Late Night Jammers":
+        return None
+
+    # Convert "Development" or "AI" to "Development/AI"
+    if old_classification in ["Development", "AI"]:
+        old_classification = "Development/AI"
+
     new_format = {
         "messages": [
             {
@@ -82,7 +92,7 @@ After your analysis, provide your final classification. Respond with only one wo
             },
             {
                 "role": "assistant",
-                "content": f"<video_classification>\n{old_format['messages'][2]['content']}\n</video_classification>"
+                "content": f"<video_classification>\n{old_classification}\n</video_classification>"
             }
         ]
     }
@@ -94,12 +104,13 @@ def convert_data(input_file: str, output_file: str):
     data = read_jsonl(input_file)
     
     # Convert data
-    converted_data = [convert_format(item) for item in data]
+    converted_data = [convert_format(item) for item in data if convert_format(item) is not None]
     
     # Write output file
     write_jsonl(converted_data, output_file)
     
     print(f"Total samples converted: {len(converted_data)}")
+    print(f"Samples skipped: {len(data) - len(converted_data)}")
 
 if __name__ == "__main__":
     input_file = "./training-data-all_8-14.jsonl"
