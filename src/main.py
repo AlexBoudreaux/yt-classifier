@@ -1,8 +1,33 @@
 import os
+import logging
 from dotenv import load_dotenv
+from youtube_operations import (
+    get_authenticated_service,
+    fetch_videos_from_playlist,
+    add_to_playlist,
+    print_video
+)
+from video_processing import (
+    process_video,
+    classify_video,
+    process_cooking_video
+)
+from database_operations import (
+    setup_supabase,
+    get_playlist_map,
+    get_all_videos,
+    insert_into_supabase
+)
+from pinecone_operations import (
+    initialize_pinecone,
+    embed_and_store_in_pinecone
+)
 
 # Load environment variables
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def main():
     logging.info("Starting video processing script")
