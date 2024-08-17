@@ -1,5 +1,4 @@
 rich
-supabase
 openai==0.28.0
 google-api-python-client
 youtube-transcript-api
@@ -9,3 +8,6 @@ selenium
 pinecone-client
 numpy
 python-dotenv
+google-cloud-firestore
+aiohttp
+pytest
