@@ -33,10 +33,12 @@ def insert_into_firebase(db, video_data):
         "transcript": video_data['transcript'],
         "summary": video_data['summary'],
         "date_added_to_playlist": datetime.utcnow(),
-        "recipe": video_data.get('recipe'),
-        "personalized_description": video_data.get('personalized_description'),
-        "food_category": video_data.get('food_category')
     }
+
+    # Add cooking-specific fields only if they exist
+    for field in ['recipe', 'personalized_description', 'food_category']:
+        if field in video_data:
+            data[field] = video_data[field]
 
     videos_ref = db.collection('videos')
     new_video_ref = videos_ref.add(data)

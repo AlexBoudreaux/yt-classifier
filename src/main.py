@@ -71,15 +71,16 @@ def main():
             category = classify_video(video_data)
             logging.info(f"Classified as: {category}")
 
+            video_data["url"] = f"https://www.youtube.com/watch?v={video_id}"
+            
             if category.strip().lower().replace('"', '') == "cooking":
                 logging.info("Processing cooking video")
-                video_data["url"] = f"https://www.youtube.com/watch?v={video_id}"
                 try:
                     video_data = process_cooking_video(video_data)
                     embed_and_store_in_pinecone(pinecone, video_data)
                 except Exception as e:
                     logging.error(f"Error processing cooking video: {str(e)}")
-                    continue
+                    # Continue processing the video even if cooking-specific steps fail
 
             # Add to appropriate playlist and database
             cleaned_category = category.strip().replace('"', '')
