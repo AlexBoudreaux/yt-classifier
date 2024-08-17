@@ -11,4 +11,4 @@ python-dotenv
 google-cloud-firestore
 aiohttp
 pytest
-supabase
+firebase-admin

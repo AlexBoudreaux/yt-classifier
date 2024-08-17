@@ -1,35 +1,24 @@
-import os
-from supabase import create_client, Client
 from datetime import datetime
 
-def setup_supabase() -> Client:
-    url: str = os.environ.get("SUPABASE_URL")
-    key: str = os.environ.get("SUPABASE_KEY")
-    supabase: Client = create_client(url, key)
-    return supabase
+def get_playlist_map(db):
+    playlists_ref = db.collection('playlists')
+    playlists = playlists_ref.get()
+    return {pl.to_dict()['playlist_name']: pl.to_dict()['playlist_id'] for pl in playlists}
 
-def get_playlist_map(supabase: Client) -> dict:
-    response = supabase.table('playlists').select('playlist_name, playlist_id').execute()
-    return {pl['playlist_name']: pl['playlist_id'] for pl in response.data}
+def get_all_videos(db):
+    videos_ref = db.collection('videos')
+    videos = videos_ref.get()
+    return [video.to_dict() for video in videos]
 
-def get_all_videos(supabase: Client, page_size: int = 1000) -> list:
-    all_videos = []
-    start_idx = 0
-    while True:
-        response = supabase.table('videos').select('*').range(start_idx, start_idx + page_size - 1).execute()
-        videos_chunk = response.data
-        if not videos_chunk:
-            break
-        all_videos.extend(videos_chunk)
-        start_idx += page_size
-    return all_videos
-
-def insert_into_supabase(supabase: Client, video_data: dict) -> dict:
-    response = supabase.table('playlists').select('id').eq('playlist_id', video_data['playlist_id']).execute()
+def insert_into_firebase(db, video_data):
+    playlists_ref = db.collection('playlists')
+    playlist_query = playlists_ref.where('playlist_id', '==', video_data['playlist_id']).get()
     
-    playlist_fk_id = response.data[0].get('id') if response.data else None
-    if not playlist_fk_id:
+    if not playlist_query:
         raise ValueError(f"No matching playlist found for playlist_id: {video_data['playlist_id']}")
+
+    playlist_doc = playlist_query[0]
+    playlist_fk_id = playlist_doc.id
 
     cleaned_category = video_data['playlist_name'].strip().replace('"', '')
 
@@ -43,11 +32,12 @@ def insert_into_supabase(supabase: Client, video_data: dict) -> dict:
         "description": video_data['description'],
         "transcript": video_data['transcript'],
         "summary": video_data['summary'],
-        "date_added_to_playlist": datetime.utcnow().isoformat(),
+        "date_added_to_playlist": datetime.utcnow(),
         "recipe": video_data.get('recipe'),
         "personalized_description": video_data.get('personalized_description'),
         "food_category": video_data.get('food_category')
     }
 
-    response = supabase.table('videos').insert(data).execute()
-    return response.data[0] if response.data else None
+    videos_ref = db.collection('videos')
+    new_video_ref = videos_ref.add(data)
+    return new_video_ref[1].get().to_dict()

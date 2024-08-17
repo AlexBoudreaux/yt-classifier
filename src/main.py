@@ -13,10 +13,9 @@ from video_processing import (
     process_cooking_video
 )
 from database_operations import (
-    setup_supabase,
     get_playlist_map,
     get_all_videos,
-    insert_into_supabase
+    insert_into_firebase
 )
 from pinecone_operations import (
     initialize_pinecone,
@@ -27,6 +26,7 @@ from js_operations import (
     deselect_cooking_videos,
     execute_js_function
 )
+from firebase_init import initialize_firebase
 
 # Load environment variables
 load_dotenv()
@@ -41,12 +41,12 @@ def main():
         execute_js_function(add_watchlater_to_temp)
 
         # Setup
-        supabase = setup_supabase()
+        db = initialize_firebase()
         youtube = get_authenticated_service()
         pinecone = initialize_pinecone()
 
         # Get playlist map and temp playlist ID
-        playlist_map = get_playlist_map(supabase)
+        playlist_map = get_playlist_map(db)
         temp_playlist_id = playlist_map.get('Temp Playlist', '')
         if not temp_playlist_id:
             logging.error("Temp Playlist not found.")
@@ -54,7 +54,7 @@ def main():
 
         # Fetch videos from temp playlist
         temp_videos = fetch_videos_from_playlist(youtube, temp_playlist_id)[::-1]
-        saved_videos = get_all_videos(supabase)
+        saved_videos = get_all_videos(db)
 
         for video in temp_videos:
             snippet = video.get('snippet', {})
@@ -91,13 +91,13 @@ def main():
 
                 try:
                     if add_to_playlist(youtube, video_id, target_playlist_id, video_data["title"]):
-                        insert_into_supabase(supabase, video_data)
+                        insert_into_firebase(db, video_data)
                         print_video(snippet.get('title'), category)
-                        logging.info("Video added to playlist and inserted into Supabase")
+                        logging.info("Video added to playlist and inserted into Firebase")
                     else:
                         logging.info("Video already in playlist or couldn't be added")
                 except Exception as e:
-                    logging.error(f"Error adding to playlist or inserting into Supabase: {str(e)}")
+                    logging.error(f"Error adding to playlist or inserting into Firebase: {str(e)}")
             else:
                 logging.warning(f"No target playlist found for category: {category}")
 
