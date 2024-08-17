@@ -1,5 +1,6 @@
 from youtube_transcript_api import YouTubeTranscriptApi
 import openai
+import logging
 
 def process_video(video_id, snippet):
     video_data = {
