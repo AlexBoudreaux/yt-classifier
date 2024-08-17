@@ -1,9 +1,10 @@
 from pinecone import Pinecone
 import openai
 import logging
+from config import PINECONE_API_KEY
 
 def initialize_pinecone():
-    return Pinecone(api_key="2620e8ef-afe4-44a2-907d-a340565666d0")
+    return Pinecone(api_key=PINECONE_API_KEY)
 
 def embed_and_store_in_pinecone(pinecone, video_data, max_tokens=8192, model="text-embedding-ada-002"):
     index_name = "recipes"

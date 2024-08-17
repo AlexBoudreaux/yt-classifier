@@ -1,6 +1,6 @@
 from selenium import webdriver
 import time
-# from config import PROFILE_PATH  # Import PROFILE_PATH from config file
+from config import PROFILE_PATH
 
 def add_watchlater_to_temp():
     chrome_options = webdriver.ChromeOptions()

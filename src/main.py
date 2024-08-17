@@ -1,16 +1,16 @@
-import os
 import logging
-from dotenv import load_dotenv
 from youtube_operations import get_authenticated_service, fetch_videos_from_playlist, add_to_playlist, print_video, video_exists_in_playlists
 from video_processing import process_video, classify_video, process_cooking_video
 from database_operations import get_playlist_map, get_all_videos, insert_into_firebase
 from firebase_init import initialize_firebase
 from js_operations import add_watchlater_to_temp, deselect_cooking_videos
 from pinecone_operations import initialize_pinecone, embed_and_store_in_pinecone
+from config import OPENAI_API_KEY
+import openai
 import json
 
-# Load environment variables
-load_dotenv()
+# Configure OpenAI API
+openai.api_key = OPENAI_API_KEY
 
 # Configure logging
 logging.basicConfig(filename='video_processing.log', level=logging.INFO, 
