@@ -49,10 +49,11 @@ def main():
 
             # Process video
             video_data = process_video(video_id, snippet)
-            category = classify_video(video_data)
+            classification_result = classify_video(video_data)
+            category = classification_result.split('<video_classification>')[1].split('</video_classification>')[0].strip()
             logging.info(f"Classified as: {category}")
 
-            if category.strip().lower().replace('"', '') == "cooking":
+            if category.lower() == "cooking":
                 logging.info("Entering cooking video processing")
                 video_data["url"] = f"https://www.youtube.com/watch?v={video_id}"
                 try:
@@ -69,8 +70,7 @@ def main():
                     logging.error(f"Error in embed_and_store_in_pinecone: {str(e)}")
                     continue
 
-            cleaned_category = category.strip().replace('"', '')
-            target_playlist = playlist_map.get(cleaned_category)
+            target_playlist = playlist_map.get(category)
 
             if target_playlist:
                 video_data["playlist_name"] = cleaned_category
