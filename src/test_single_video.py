@@ -17,7 +17,7 @@ def test_single_video():
     logging.info("Starting single video test")
     try:
         # Setup
-        db = initialize_firebase()
+        firebase_app, db = initialize_firebase()
         youtube = get_authenticated_service()
         pinecone = initialize_pinecone()
 
