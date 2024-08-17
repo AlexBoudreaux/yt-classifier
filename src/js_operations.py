@@ -1,5 +1,6 @@
 from selenium import webdriver
 import time
+from config import PROFILE_PATH  # Import PROFILE_PATH from config file
 
 def add_watchlater_to_temp():
     # This function will contain the JavaScript code for add_watchlater_to_temp
