@@ -44,7 +44,7 @@ def main():
                 continue
 
             # Check if video already exists in any playlist
-            if video_exists_in_playlists(youtube, playlist_map):
+            if video_exists_in_playlists(youtube, playlist_map, video_id):
                 continue
 
             # Process video

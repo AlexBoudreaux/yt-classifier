@@ -10,7 +10,7 @@ def add_to_playlist(youtube, video_id, playlist_id, video_title):
 def print_video(video_title, category):
     pass
 
-def video_exists_in_playlists(youtube, playlist_map):
+def video_exists_in_playlists(youtube, playlist_map, video_id):
     for playlist in playlist_map.values():
         playlist_items = youtube.playlistItems().list(
             part="snippet",
