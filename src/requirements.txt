@@ -8,3 +8,4 @@ google-auth
 selenium
 pinecone-client
 numpy
+python-dotenv
