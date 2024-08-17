@@ -1,11 +1,12 @@
 import logging
-from youtube_operations import get_authenticated_service, fetch_videos_from_playlist, add_to_playlist, print_video
+from youtube_operations import get_authenticated_service, add_to_playlist, print_video, video_exists_in_playlists
 from video_processing import process_video, classify_video, process_cooking_video
 from database_operations import get_playlist_map, insert_into_firebase
 from firebase_init import initialize_firebase
 from pinecone_operations import initialize_pinecone, embed_and_store_in_pinecone
 from config import OPENAI_API_KEY
 import openai
+import json
 
 # Configure OpenAI API
 openai.api_key = OPENAI_API_KEY
@@ -39,17 +40,23 @@ def test_single_video():
 
         snippet = video_details['items'][0]['snippet']
 
+        # Check if video already exists in any playlist
+        if video_exists_in_playlists(youtube, playlist_map, test_video_id):
+            logging.info("Video already exists in a playlist")
+            return
+
         # Process video
         video_data = process_video(test_video_id, snippet)
-        category = classify_video(video_data)
+        classification_result = classify_video(video_data)
+        category = classification_result.split('<video_classification>')[1].split('</video_classification>')[0].strip()
         logging.info(f"Classified as: {category}")
 
-        if category.strip().lower().replace('"', '') == "cooking":
+        if category.lower() == "cooking":
             logging.info("Entering cooking video processing")
             video_data["url"] = f"https://www.youtube.com/watch?v={test_video_id}"
             try:
                 video_data = process_cooking_video(video_data)
-                logging.info(f"Processed cooking video data: {video_data}")
+                logging.info(f"Processed cooking video data: {json.dumps(video_data, indent=2)}")
             except Exception as e:
                 logging.error(f"Error in process_cooking_video: {str(e)}")
                 return
@@ -61,11 +68,10 @@ def test_single_video():
                 logging.error(f"Error in embed_and_store_in_pinecone: {str(e)}")
                 return
 
-        cleaned_category = category.strip().replace('"', '')
-        target_playlist = playlist_map.get(cleaned_category)
+        target_playlist = playlist_map.get(category)
 
         if target_playlist:
-            video_data["playlist_name"] = cleaned_category
+            video_data["playlist_name"] = category
             video_data["playlist_id"] = target_playlist['playlist_id']
             video_data["playlist_firebase_id"] = target_playlist['firebase_id']
 
