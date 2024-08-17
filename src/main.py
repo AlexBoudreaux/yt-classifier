@@ -22,6 +22,11 @@ from pinecone_operations import (
     initialize_pinecone,
     embed_and_store_in_pinecone
 )
+from js_operations import (
+    add_watchlater_to_temp,
+    deselect_cooking_videos,
+    execute_js_function
+)
 
 # Load environment variables
 load_dotenv()
@@ -32,6 +37,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 def main():
     logging.info("Starting video processing script")
     try:
+        # Execute JavaScript to add Watch Later videos to Temp playlist
+        execute_js_function(add_watchlater_to_temp)
+
         # Setup
         supabase = setup_supabase()
         youtube = get_authenticated_service()
@@ -92,6 +100,9 @@ def main():
                     logging.error(f"Error adding to playlist or inserting into Supabase: {str(e)}")
             else:
                 logging.warning(f"No target playlist found for category: {category}")
+
+        # Execute JavaScript to deselect cooking videos from Watch Later
+        execute_js_function(deselect_cooking_videos)
 
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}", exc_info=True)
