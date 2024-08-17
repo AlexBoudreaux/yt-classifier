@@ -25,7 +25,7 @@ def test_single_video():
         playlist_map = get_playlist_map(db)
         
         # Specify a test video ID
-        test_video_id = "dQw4w9WgXcQ"  # Replace with an actual video ID you want to test
+        test_video_id = "uiLT64IOTY4"  # Replace with an actual video ID you want to test
         
         # Fetch video details
         video_details = youtube.videos().list(
