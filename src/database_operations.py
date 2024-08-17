@@ -3,7 +3,14 @@ from datetime import datetime
 def get_playlist_map(db):
     playlists_ref = db.collection('playlists')
     playlists = playlists_ref.get()
-    return {pl.to_dict()['playlist_name']: pl.to_dict()['playlist_id'] for pl in playlists}
+    playlist_map = {}
+    for pl in playlists:
+        pl_dict = pl.to_dict()
+        playlist_map[pl_dict['playlist_name']] = {
+            'playlist_id': pl_dict['playlist_id'],
+            'firebase_id': pl.id
+        }
+    return playlist_map
 
 def get_all_videos(db):
     videos_ref = db.collection('videos')
