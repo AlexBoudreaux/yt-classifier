@@ -1,7 +1,7 @@
 import os
 import logging
 from dotenv import load_dotenv
-from youtube_operations import get_authenticated_service, fetch_videos_from_playlist, add_to_playlist, print_video
+from youtube_operations import get_authenticated_service, fetch_videos_from_playlist, add_to_playlist, print_video, video_exists_in_playlists
 from video_processing import process_video, classify_video, process_cooking_video
 from database_operations import get_playlist_map, get_all_videos, insert_into_firebase
 from firebase_init import initialize_firebase
@@ -36,8 +36,6 @@ def main():
 
         # Fetch videos from temp playlist
         temp_videos = fetch_videos_from_playlist(youtube, temp_playlist_id)[::-1]
-        saved_videos = get_all_videos(db)
-
         for video in temp_videos:
             snippet = video.get('snippet', {})
             video_id = snippet.get('resourceId', {}).get('videoId', '')
@@ -45,7 +43,8 @@ def main():
             if snippet.get('title') in ["Private video", "Deleted video"] or not video_id:
                 continue
 
-            if any(v['video_id'] == video_id for v in saved_videos):
+            # Check if video already exists in any playlist
+            if video_exists_in_playlists(youtube, playlist_map):
                 continue
 
             # Process video
