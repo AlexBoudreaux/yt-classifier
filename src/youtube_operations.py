@@ -1,3 +1,9 @@
+import os
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+
 def get_authenticated_service():
     SCOPES = ["https://www.googleapis.com/auth/youtube.force-ssl"]
     creds = None
@@ -60,12 +66,15 @@ def print_video(video_title, category):
 
 def video_exists_in_playlists(youtube, playlist_map, video_id):
     for playlist in playlist_map.values():
-        playlist_items = youtube.playlistItems().list(
-            part="snippet",
-            playlistId=playlist['playlist_id'],
-            videoId=video_id
-        ).execute()
-        
-        if playlist_items['items']:
-            return True
+        try:
+            playlist_items = youtube.playlistItems().list(
+                part="snippet",
+                playlistId=playlist['playlist_id'],
+                videoId=video_id
+            ).execute()
+            
+            if playlist_items['items']:
+                return True
+        except Exception as e:
+            print(f"Error checking playlist {playlist['playlist_id']}: {str(e)}")
     return False
