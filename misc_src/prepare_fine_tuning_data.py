@@ -18,19 +18,14 @@ def convert_format(old_format: Dict) -> Dict:
     old_user_content = json.loads(old_format['messages'][1]['content'])
     old_classification = old_format['messages'][2]['content'].strip()
 
-    # Skip "Late Night Jammers" classification
-    if old_classification == "Late Night Jammers":
-        return None
-
-    # Convert "Development" or "AI" to "Development/AI"
-    if old_classification in ["Development", "AI"]:
-        old_classification = "Development/AI"
-
     new_format = {
         "messages": [
             {
                 "role": "system",
                 "content": """You are a Youtube Video Classifier. Your task is to classify a given video into one of the following categories:
+
+"Cooking"
+<description>Videos focusing on food preparation, recipes, and culinary techniques. This category includes cooking tutorials, recipe demonstrations, food reviews, and kitchen tips. Key indicators include ingredient lists, cooking instructions, and food-related terminology.</description>
 
 "Shows"
 <description>Videos featuring TV shows, sports events, skits or shorts from TV shows, and YouTube short films. This category includes documentaries not specifically about science or history. It excludes podcasts, comedy podcasts, and stand-up comedy sessions. Key indicators include episodic content, sports footage, and short-form entertainment.</description>

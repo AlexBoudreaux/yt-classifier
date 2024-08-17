@@ -6,3 +6,5 @@ youtube-transcript-api
 google-auth-oauthlib
 google-auth
 selenium
+pinecone-client
+numpy
