@@ -22,7 +22,7 @@ def transcribe_video(video_id, video_title):
     try:
         transcript_data = YouTubeTranscriptApi.get_transcript(video_id)
         transcript_words = [i["text"].replace("\xa0", "").replace("\n", " ") for i in transcript_data]
-        return " ".join(transcript_words[:1000])  # Limit to first 1000 words
+        return " ".join(transcript_words)  # Return the full transcript
     except:
         print(f"Video {video_title} could not be transcribed.")
         return "Transcription not available."
@@ -119,7 +119,7 @@ def classify_video(video_data):
         return "Misc."  # Fallback category
 
 def process_cooking_video(video_data):
-    # Generate recipe
+    # Generate recipe using full transcript
     recipe = generate_recipe(video_data)
     video_data["recipe"] = recipe
     
