@@ -73,7 +73,7 @@ def main():
             target_playlist = playlist_map.get(category)
 
             if target_playlist:
-                video_data["playlist_name"] = cleaned_category
+                video_data["playlist_name"] = category
                 video_data["playlist_id"] = target_playlist['playlist_id']
                 video_data["playlist_firebase_id"] = target_playlist['firebase_id']
 
