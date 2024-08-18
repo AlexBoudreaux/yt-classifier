@@ -33,6 +33,7 @@ async def add_watchlater_to_temp():
             var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
             if (videoIndex >= videos.length) {
                 console.log('All videos processed in findStartingPoint');
+                window.scriptCompleted = true;
                 return;
             }
 
@@ -141,10 +142,10 @@ async def add_watchlater_to_temp():
         """
 
             # Execute the JavaScript code
-            await page.evaluate(js_code)
+            await page.evaluate_handle(js_code)
 
             # Wait for the JavaScript code to complete
-            await page.wait_for_function("window.scriptCompleted")
+            await page.wait_for_function("() => window.scriptCompleted")
             await browser.close()
     except Error as e:
         print(f"An error occurred: {e}")
