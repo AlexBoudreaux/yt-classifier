@@ -69,13 +69,13 @@ def add_watchlater_to_temp():
                     }
                     videoIndex++;
                     findStartingPoint();
-                }, randomDelay(800, 1500));
+                }, randomDelay(300, 550));
             } else {
                 console.log('Save to playlist button not found at video index:', videoIndex);
                 videoIndex++;
                 findStartingPoint();
             }
-        }, randomDelay(800, 1500));
+        }, randomDelay(300, 550));
     }
 
     function addVideosToTemp() {
@@ -122,15 +122,15 @@ def add_watchlater_to_temp():
                             } else {
                                 console.log('Exit button not found');
                             }
-                        }, randomDelay(800, 1500));
+                        }, randomDelay(300, 550));
                     } else {
                         console.log('Temp Playlist button not found');
                     }
-                }, randomDelay(800, 1500));
+                }, randomDelay(300, 550));
             } else {
                 console.log('Save to playlist button not found');
             }
-        }, randomDelay(800, 1500));
+        }, randomDelay(300, 550));
     }
 
     findStartingPoint();  // Start the first function
@@ -249,3 +249,7 @@ def deselect_cooking_videos():
     # Wait for the JavaScript code to complete
     while not is_script_completed():
         time.sleep(1)  # Check every second
+
+
+if __name__ == '__main__':
+    add_watchlater_to_temp()
