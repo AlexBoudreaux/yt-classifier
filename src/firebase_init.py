@@ -1,7 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
-from src.config import FIREBASE_ADMIN_SDK_PATH
+from config import FIREBASE_ADMIN_SDK_PATH
 
 def initialize_firebase():
     if not firebase_admin._apps:
