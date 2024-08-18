@@ -26,7 +26,7 @@ def test_single_video():
         playlist_map = get_playlist_map(db)
         
         # Specify a test video ID
-        test_video_id = "uiLT64IOTY4"  # Replace with an actual video ID you want to test
+        test_video_id = "loT3BC2PXH4"  # Replace with an actual video ID you want to test
         
         # Fetch video details
         video_details = youtube.videos().list(
@@ -48,6 +48,7 @@ def test_single_video():
         # Process video
         video_data = process_video(test_video_id, snippet)
         classification_result = classify_video(video_data)
+        print(classification_result)
         category = classification_result.split('<video_classification>')[1].split('</video_classification>')[0].strip()
         logging.info(f"Classified as: {category}")
 
