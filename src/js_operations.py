@@ -1,6 +1,7 @@
 from selenium import webdriver
 import time
 import os
+import logging
 
 PROFILE_PATH = "/Users/alexboudreaux/Library/Application Support/Google/Chrome/Default"
 
