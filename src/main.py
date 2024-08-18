@@ -4,7 +4,7 @@ from src.youtube_operations import get_authenticated_service, fetch_videos_from_
 from src.video_processing import process_video, classify_video, process_cooking_video
 from src.database_operations import get_playlist_map, get_all_videos, insert_into_firebase
 from src.firebase_init import initialize_firebase
-from js_operations import deselect_cooking_videos
+from src.js_operations import deselect_cooking_videos
 from pinecone_operations import initialize_pinecone, embed_and_store_in_pinecone
 from config import OPENAI_API_KEY
 import openai
