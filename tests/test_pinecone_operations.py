@@ -14,7 +14,8 @@ class TestPineconeOperations(unittest.TestCase):
     @patch('src.pinecone_operations.Pinecone')
     def test_embed_and_store_in_pinecone(self, MockIndex, mock_openai):
         mock_index_instance = MockIndex.return_value
-        mock_openai.return_value = {'data': [{'embedding': [0.1, 0.2, 0.3]}]}
+        mock_openai.return_value = MagicMock()
+        mock_openai.return_value.create.return_value = {'data': [{'embedding': [0.1, 0.2, 0.3]}]}
         video_data = {
             'title': 'Test Video',
             'creator': 'Test Creator',

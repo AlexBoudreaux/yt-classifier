@@ -1,7 +1,7 @@
 import logging
 from tenacity import retry, stop_after_attempt, wait_fixed
 from src.youtube_operations import get_authenticated_service, fetch_videos_from_playlist, add_to_playlist, print_video, video_exists_in_playlists
-from video_processing import process_video, classify_video, process_cooking_video
+from src.video_processing import process_video, classify_video, process_cooking_video
 from database_operations import get_playlist_map, get_all_videos, insert_into_firebase
 from firebase_init import initialize_firebase
 from js_operations import deselect_cooking_videos
