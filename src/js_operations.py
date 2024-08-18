@@ -69,13 +69,13 @@ def add_watchlater_to_temp():
                     }
                     videoIndex++;
                     findStartingPoint();
-                }, randomDelay(1000, 2000));
+                }, randomDelay(800, 1500));
             } else {
                 console.log('Save to playlist button not found at video index:', videoIndex);
                 videoIndex++;
                 findStartingPoint();
             }
-        }, randomDelay(1000, 2000));
+        }, randomDelay(800, 1500));
     }
 
     function addVideosToTemp() {
@@ -122,15 +122,15 @@ def add_watchlater_to_temp():
                             } else {
                                 console.log('Exit button not found');
                             }
-                        }, randomDelay(1000, 2000));
+                        }, randomDelay(800, 1500));
                     } else {
                         console.log('Temp Playlist button not found');
                     }
-                }, randomDelay(1000, 2000));
+                }, randomDelay(800, 1500));
             } else {
                 console.log('Save to playlist button not found');
             }
-        }, randomDelay(1000, 2000));
+        }, randomDelay(800, 1500));
     }
 
     findStartingPoint();  // Start the first function
