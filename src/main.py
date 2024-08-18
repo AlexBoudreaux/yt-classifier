@@ -6,7 +6,7 @@ from src.database_operations import get_playlist_map, get_all_videos, insert_int
 from src.firebase_init import initialize_firebase
 from src.js_operations import deselect_cooking_videos
 from src.pinecone_operations import initialize_pinecone, embed_and_store_in_pinecone
-from config import OPENAI_API_KEY
+from src.config import OPENAI_API_KEY
 import openai
 import json
 
