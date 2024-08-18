@@ -238,5 +238,7 @@ async def deselect_cooking_videos():
         await browser.close()
 
 
+import asyncio
+
 if __name__ == "__main__":
-    add_watchlater_to_temp()
+    asyncio.run(add_watchlater_to_temp())
