@@ -11,10 +11,19 @@ def add_watchlater_to_temp():
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument(f"user-data-dir={PROFILE_PATH}")
 
-    driver = webdriver.Chrome(options=chrome_options)
+    try:
+        driver = webdriver.Chrome(options=chrome_options)
+    except Exception as e:
+        logging.error(f"Error initializing WebDriver: {str(e)}", exc_info=True)
+        return
 
-    # # Navigate to Watch Later playlist
-    driver.get('https://www.youtube.com/playlist?list=WL')
+    try:
+        # Navigate to Watch Later playlist
+        driver.get('https://www.youtube.com/playlist?list=WL')
+    except Exception as e:
+        logging.error(f"Error navigating to Watch Later playlist: {str(e)}", exc_info=True)
+        driver.quit()
+        return
 
     # Here's your JavaScript code as a multi-line string
     js_code = """
@@ -137,14 +146,24 @@ def add_watchlater_to_temp():
     """
 
     # Execute the JavaScript code
-    driver.execute_script(js_code)
+    try:
+        driver.execute_script(js_code)
+    except Exception as e:
+        logging.error(f"Error executing JavaScript code: {str(e)}", exc_info=True)
+        driver.quit()
+        return
 
     def is_script_completed():
         return driver.execute_script("return window.scriptCompleted;")
 
     # Wait for the JavaScript code to complete
     while not is_script_completed():
-        time.sleep(1)  # Check every second
+        try:
+            time.sleep(1)  # Check every second
+        except Exception as e:
+            logging.error(f"Error during script completion check: {str(e)}", exc_info=True)
+            break
+    driver.quit()
 
 def deselect_cooking_videos():
     chrome_options = webdriver.ChromeOptions()
@@ -153,10 +172,19 @@ def deselect_cooking_videos():
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument(f"user-data-dir={PROFILE_PATH}")
 
-    driver = webdriver.Chrome(options=chrome_options)
+    try:
+        driver = webdriver.Chrome(options=chrome_options)
+    except Exception as e:
+        logging.error(f"Error initializing WebDriver: {str(e)}", exc_info=True)
+        return
 
-    # # Navigate to Watch Later playlist
-    driver.get('https://www.youtube.com/playlist?list=WL')
+    try:
+        # Navigate to Watch Later playlist
+        driver.get('https://www.youtube.com/playlist?list=WL')
+    except Exception as e:
+        logging.error(f"Error navigating to Watch Later playlist: {str(e)}", exc_info=True)
+        driver.quit()
+        return
 
     # Here's your JavaScript code as a multi-line string
     js_code = """
@@ -241,14 +269,24 @@ def deselect_cooking_videos():
     """
 
     # Execute the JavaScript code
-    driver.execute_script(js_code)
+    try:
+        driver.execute_script(js_code)
+    except Exception as e:
+        logging.error(f"Error executing JavaScript code: {str(e)}", exc_info=True)
+        driver.quit()
+        return
 
     def is_script_completed():
         return driver.execute_script("return window.scriptCompleted;")
 
     # Wait for the JavaScript code to complete
     while not is_script_completed():
-        time.sleep(1)  # Check every second
+        try:
+            time.sleep(1)  # Check every second
+        except Exception as e:
+            logging.error(f"Error during script completion check: {str(e)}", exc_info=True)
+            break
+    driver.quit()
 
 
 if __name__ == '__main__':
