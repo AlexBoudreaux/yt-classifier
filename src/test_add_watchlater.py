@@ -1,6 +1,9 @@
 import logging
 import asyncio
+import nest_asyncio
 from src.js_operations import add_watchlater_to_temp
+
+nest_asyncio.apply()
 
 # Configure logging
 logging.basicConfig(filename='test_add_watchlater.log', level=logging.INFO, 
@@ -15,9 +18,4 @@ async def test_add_watchlater_to_temp():
         logging.error(f"An error occurred during the test: {str(e)}", exc_info=True)
 
 if __name__ == "__main__":
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    loop.run_until_complete(test_add_watchlater_to_temp())
+    asyncio.run(test_add_watchlater_to_temp())
