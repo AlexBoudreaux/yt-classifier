@@ -1,140 +1,143 @@
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, Error
 import asyncio
 from src.config import PROFILE_PATH
 
 async def add_watchlater_to_temp():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context(user_data_dir=PROFILE_PATH)
-        page = await context.new_page()
-        await page.goto('https://www.youtube.com/playlist?list=WL')
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=False)
+            context = await browser.new_context(user_data_dir=PROFILE_PATH)
+            page = await context.new_page()
+            await page.goto('https://www.youtube.com/playlist?list=WL')
 
-        # Here's your JavaScript code as a multi-line string
-        js_code = """
-    var videoIndex = 0;
-    var consecutiveAddedCount = 0;
+            # Here's your JavaScript code as a multi-line string
+            js_code = """
+        var videoIndex = 0;
+        var consecutiveAddedCount = 0;
 
-    function randomDelay(min, max) {
-        return Math.random() * (max - min) + min;
-    }
-
-    function findStartingPoint() {
-        var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
-        if (videoIndex >= videos.length) {
-            console.log('All videos processed in findStartingPoint');
-            return;
+        function randomDelay(min, max) {
+            return Math.random() * (max - min) + min;
         }
 
-        var video = videos[videoIndex];
-        video.querySelector('#primary button[aria-label="Action menu"]').click();
+        function findStartingPoint() {
+            var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
+            if (videoIndex >= videos.length) {
+                console.log('All videos processed in findStartingPoint');
+                return;
+            }
 
-        setTimeout(function() {
-            var saveButton = document.evaluate(
-                '//yt-formatted-string[contains(text(),"Save to playlist")]',
-                document,
-                null,
-                XPathResult.FIRST_ORDERED_NODE_TYPE,
-                null
-            ).singleNodeValue;
+            var video = videos[videoIndex];
+            video.querySelector('#primary button[aria-label="Action menu"]').click();
 
-            if (saveButton) {
-                saveButton.click();
+            setTimeout(function() {
+                var saveButton = document.evaluate(
+                    '//yt-formatted-string[contains(text(),"Save to playlist")]',
+                    document,
+                    null,
+                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    null
+                ).singleNodeValue;
 
-                setTimeout(function() {
-                    var tempPlaylistCheckbox = document.evaluate(
-                        '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
-                        document,
-                        null,
-                        XPathResult.FIRST_ORDERED_NODE_TYPE,
-                        null
-                    ).singleNodeValue;
+                if (saveButton) {
+                    saveButton.click();
 
-                    if (tempPlaylistCheckbox && tempPlaylistCheckbox.getAttribute('aria-checked') === 'true') {
-                        consecutiveAddedCount++;
-                        if (consecutiveAddedCount >= 5) {
-                            console.log('Found starting point at video index:', videoIndex - 4); // Adjusting for 0-based index and to go 5 videos up
-                            videoIndex -= 5;  // Adjust to the starting point for adding videos
-                            addVideosToTemp();  // Start the second function
-                            return;
+                    setTimeout(function() {
+                        var tempPlaylistCheckbox = document.evaluate(
+                            '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
+                            document,
+                            null,
+                            XPathResult.FIRST_ORDERED_NODE_TYPE,
+                            null
+                        ).singleNodeValue;
+
+                        if (tempPlaylistCheckbox && tempPlaylistCheckbox.getAttribute('aria-checked') === 'true') {
+                            consecutiveAddedCount++;
+                            if (consecutiveAddedCount >= 5) {
+                                console.log('Found starting point at video index:', videoIndex - 4); // Adjusting for 0-based index and to go 5 videos up
+                                videoIndex -= 5;  // Adjust to the starting point for adding videos
+                                addVideosToTemp();  // Start the second function
+                                return;
+                            }
+                        } else {
+                            consecutiveAddedCount = 0;  // Reset the counter if a video not in Temp Playlist is found
                         }
-                    } else {
-                        consecutiveAddedCount = 0;  // Reset the counter if a video not in Temp Playlist is found
-                    }
+                        videoIndex++;
+                        findStartingPoint();
+                    }, randomDelay(1000, 2000));
+                } else {
+                    console.log('Save to playlist button not found at video index:', videoIndex);
                     videoIndex++;
                     findStartingPoint();
-                }, randomDelay(1000, 2000));
-            } else {
-                console.log('Save to playlist button not found at video index:', videoIndex);
-                videoIndex++;
-                findStartingPoint();
-            }
-        }, randomDelay(1000, 2000));
-    }
-
-    function addVideosToTemp() {
-        if (videoIndex < 0) {
-            console.log('All videos processed');
-            window.scriptCompleted = true;
-            return;
+                }
+            }, randomDelay(1000, 2000));
         }
 
-        var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
-        var video = videos[videoIndex];
-        video.querySelector('#primary button[aria-label="Action menu"]').click();
-
-        setTimeout(function() {
-            var saveButton = document.evaluate(
-                '//yt-formatted-string[contains(text(),"Save to playlist")]',
-                document,
-                null,
-                XPathResult.FIRST_ORDERED_NODE_TYPE,
-                null
-            ).singleNodeValue;
-
-            if (saveButton) {
-                saveButton.click();
-
-                setTimeout(function() {
-                    var tempPlaylistButton = document.evaluate(
-                        '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
-                        document,
-                        null,
-                        XPathResult.FIRST_ORDERED_NODE_TYPE,
-                        null
-                    ).singleNodeValue;
-
-                    if (tempPlaylistButton) {
-                        tempPlaylistButton.click();
-
-                        setTimeout(function() {
-                            var exitButton = document.querySelector('button[aria-label="Cancel"]');
-                            if (exitButton) {
-                                exitButton.click();
-                                videoIndex--;
-                                addVideosToTemp();  // Move to the previous video and continue
-                            } else {
-                                console.log('Exit button not found');
-                            }
-                        }, randomDelay(1000, 2000));
-                    } else {
-                        console.log('Temp Playlist button not found');
-                    }
-                }, randomDelay(1000, 2000));
-            } else {
-                console.log('Save to playlist button not found');
+        function addVideosToTemp() {
+            if (videoIndex < 0) {
+                console.log('All videos processed');
+                window.scriptCompleted = true;
+                return;
             }
-        }, randomDelay(1000, 2000));
-    }
 
-    findStartingPoint();  // Start the first function
-    """
+            var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
+            var video = videos[videoIndex];
+            video.querySelector('#primary button[aria-label="Action menu"]').click();
 
-        # Execute the JavaScript code
-        await page.evaluate(js_code)
+            setTimeout(function() {
+                var saveButton = document.evaluate(
+                    '//yt-formatted-string[contains(text(),"Save to playlist")]',
+                    document,
+                    null,
+                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    null
+                ).singleNodeValue;
 
-        # Wait for the JavaScript code to complete
-        await page.wait_for_function("window.scriptCompleted")
-        await browser.close()
+                if (saveButton) {
+                    saveButton.click();
+
+                    setTimeout(function() {
+                        var tempPlaylistButton = document.evaluate(
+                            '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
+                            document,
+                            null,
+                            XPathResult.FIRST_ORDERED_NODE_TYPE,
+                            null
+                        ).singleNodeValue;
+
+                        if (tempPlaylistButton) {
+                            tempPlaylistButton.click();
+
+                            setTimeout(function() {
+                                var exitButton = document.querySelector('button[aria-label="Cancel"]');
+                                if (exitButton) {
+                                    exitButton.click();
+                                    videoIndex--;
+                                    addVideosToTemp();  // Move to the previous video and continue
+                                } else {
+                                    console.log('Exit button not found');
+                                }
+                            }, randomDelay(1000, 2000));
+                        } else {
+                            console.log('Temp Playlist button not found');
+                        }
+                    }, randomDelay(1000, 2000));
+                } else {
+                    console.log('Save to playlist button not found');
+                }
+            }, randomDelay(1000, 2000));
+        }
+
+        findStartingPoint();  // Start the first function
+        """
+
+            # Execute the JavaScript code
+            await page.evaluate(js_code)
+
+            # Wait for the JavaScript code to complete
+            await page.wait_for_function("window.scriptCompleted")
+            await browser.close()
+    except Error as e:
+        print(f"An error occurred: {e}")
 
 
 async def deselect_cooking_videos():

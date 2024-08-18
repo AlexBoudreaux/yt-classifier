@@ -1,7 +1,7 @@
 import logging
 import asyncio
 import nest_asyncio
-from src.js_operations import add_watchlater_to_temp
+from js_operations import add_watchlater_to_temp
 
 nest_asyncio.apply()
 
