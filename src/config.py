@@ -18,7 +18,7 @@ YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
 # Chrome Profile Path
-PROFILE_PATH = os.getenv("CHROME_PROFILE_PATH")
+PROFILE_PATH = os.getenv("CHROME_PROFILE_PATH", "/path/to/default/chrome/profile")
 if not PROFILE_PATH:
     logging.error("CHROME_PROFILE_PATH is not set in the environment variables.")
     raise EnvironmentError("CHROME_PROFILE_PATH is not set in the environment variables.")
