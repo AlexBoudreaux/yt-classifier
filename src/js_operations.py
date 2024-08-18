@@ -1,5 +1,5 @@
 from playwright.sync_api import sync_playwright, Error
-from src.config import PROFILE_PATH
+from config import PROFILE_PATH
 
 def add_watchlater_to_temp():
     try:
@@ -138,7 +138,6 @@ def add_watchlater_to_temp():
     except Error as e:
         print(f"An error occurred: {e}")
 
-
 def deselect_cooking_videos():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
@@ -235,3 +234,6 @@ def deselect_cooking_videos():
         page.wait_for_function("window.scriptCompleted")
         browser.close()
 
+
+if __name__ == "__main__":
+    add_watchlater_to_temp()
