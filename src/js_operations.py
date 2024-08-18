@@ -8,7 +8,15 @@ async def add_watchlater_to_temp():
     try:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=False)
-            context = await browser.new_context(user_data_dir=PROFILE_PATH)
+            context = await browser.new_context()
+            await context.add_cookies([{
+                'name': 'user_data_dir',
+                'value': PROFILE_PATH,
+                'domain': '.youtube.com',
+                'path': '/',
+                'httpOnly': True,
+                'secure': True
+            }])
             page = await context.new_page()
             await page.goto('https://www.youtube.com/playlist?list=WL')
 
