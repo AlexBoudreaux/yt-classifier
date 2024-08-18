@@ -15,4 +15,5 @@ async def test_add_watchlater_to_temp():
         logging.error(f"An error occurred during the test: {str(e)}", exc_info=True)
 
 if __name__ == "__main__":
-    asyncio.run(test_add_watchlater_to_temp())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(test_add_watchlater_to_temp())
