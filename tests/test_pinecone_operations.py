@@ -15,6 +15,7 @@ class TestPineconeOperations(unittest.TestCase):
     def test_embed_and_store_in_pinecone(self, MockIndex, mock_openai):
         mock_index_instance = MockIndex.return_value
         mock_openai.return_value.create.return_value = {'data': [{'embedding': [0.1, 0.2, 0.3]}]}
+        mock_index_instance.upsert.return_value = None
         mock_openai.return_value.create.return_value = {'data': [{'embedding': [0.1, 0.2, 0.3]}]}
         video_data = {
             'title': 'Test Video',
