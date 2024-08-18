@@ -1,19 +1,29 @@
-from playwright.async_api import async_playwright, Error
-import asyncio
-import nest_asyncio
-nest_asyncio.apply()
-from config import PROFILE_PATH
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+import time
+import os
 
-async def add_watchlater_to_temp():
+def add_watchlater_to_temp():
+    chrome_options = Options()
+    chrome_options.add_argument(f"user-data-dir={os.getenv('CHROME_PROFILE_PATH')}")
+    chrome_options.add_argument("--start-maximized")
+
+    service = Service(executable_path=os.getenv('CHROMEDRIVER_PATH'))
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+
     try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=False)
-            context = await browser.new_context(user_data_dir=PROFILE_PATH)
-            page = await context.new_page()
-            await page.goto('https://www.youtube.com/playlist?list=WL')
+        driver.get("https://www.youtube.com/playlist?list=WL")
 
-            # Here's your JavaScript code as a multi-line string
-            js_code = """
+        def is_script_completed(driver):
+            return driver.execute_script("return window.scriptCompleted === true")
+
+        js_code = """
         var videoIndex = 0;
         var consecutiveAddedCount = 0;
 
@@ -133,113 +143,14 @@ async def add_watchlater_to_temp():
         findStartingPoint();  // Start the first function
         """
 
-            # Execute the JavaScript code
-            await page.evaluate_handle(js_code)
+        driver.execute_script(js_code)
 
-            # Wait for the JavaScript code to complete
-            await page.wait_for_function("() => window.scriptCompleted")
-            await browser.close()
-    except Error as e:
+        try:
+            WebDriverWait(driver, 600).until(is_script_completed)
+        except TimeoutException:
+            print("Script did not complete within the expected time.")
+
+    except Exception as e:
         print(f"An error occurred: {e}")
-
-async def deselect_cooking_videos():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context(user_data_dir=PROFILE_PATH)
-        page = await context.new_page()
-        await page.goto('https://www.youtube.com/playlist?list=WL')
-
-        # Here's your JavaScript code as a multi-line string
-        js_code = """
-    var videoIndex = 0;
-    var cookingVideosRemoved = 0;
-
-    function randomDelay(min, max) {
-    return Math.random() * (max - min) + min;
-    }
-
-    function deselectWatchLater() {
-    var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
-    if (videoIndex >= videos.length) {
-        console.log('All videos processed');
-        console.log('Total cooking videos removed from Watch Later:', cookingVideosRemoved);
-        return;
-    }
-    var video = videos[videoIndex];
-    video.querySelector('#primary button[aria-label="Action menu"]').click();
-    setTimeout(() => {
-        var saveButton = document.evaluate(
-        '//yt-formatted-string[contains(text(),"Save to playlist")]',
-        document,
-        null,
-        XPathResult.FIRST_ORDERED_NODE_TYPE,
-        null
-        ).singleNodeValue;
-        if (saveButton) {
-        saveButton.click();
-        setTimeout(() => {
-            var cookingPlaylistCheckbox = document.evaluate(
-            '//yt-formatted-string[contains(text(),"Cooking")]/ancestor::tp-yt-paper-checkbox',
-            document,
-            null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null
-            ).singleNodeValue;
-            if (cookingPlaylistCheckbox && cookingPlaylistCheckbox.getAttribute('aria-checked') === 'true') {
-            var watchLaterCheckbox = document.querySelector('ytd-playlist-add-to-option-renderer tp-yt-paper-checkbox[checked] #label[title="Watch later"]');
-            if (watchLaterCheckbox) {
-                watchLaterCheckbox.click();
-                console.log('Cooking video removed from Watch Later at index:', videoIndex);
-                cookingVideosRemoved++;
-                setTimeout(() => {
-                var closeButton = document.querySelector('yt-icon-button[icon="close"], button[aria-label="Close"]');
-                if (!closeButton) {
-                    closeButton = document.querySelector('button[aria-label="Cancel"]');
-                }
-                if (closeButton) {
-                    closeButton.click();
-                }
-                videoIndex++;
-                setTimeout(deselectWatchLater, randomDelay(1000, 2000)); // Process next video after a delay
-                }, randomDelay(500, 1500)); // Wait for the checkbox interaction
-            } else {
-                closeSaveMenuAndProceed();
-            }
-            } else {
-            closeSaveMenuAndProceed();
-            }
-        }, randomDelay(1000, 2000));
-        } else {
-        videoIndex++;
-        deselectWatchLater();
-        }
-    }, randomDelay(500, 1000));
-    }
-
-    function closeSaveMenuAndProceed() {
-    var closeButton = document.querySelector('yt-icon-button[icon="close"], button[aria-label="Close"]');
-    if (!closeButton) {
-        closeButton = document.querySelector('button[aria-label="Cancel"]');
-    }
-    if (closeButton) {
-        closeButton.click();
-    }
-    videoIndex++;
-    setTimeout(deselectWatchLater, randomDelay(1000, 2000)); // Proceed to next video after a delay
-    }
-
-    deselectWatchLater(); // Start the script
-    """
-
-        # Execute the JavaScript code
-        await page.evaluate(js_code)
-
-        # Wait for the JavaScript code to complete
-        await page.wait_for_function("window.scriptCompleted")
-        await browser.close()
-
-
-import asyncio
-
-if __name__ == "__main__":
-    asyncio.run(add_watchlater_to_temp())
+    finally:
+        driver.quit()

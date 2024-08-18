@@ -3,7 +3,7 @@ from youtube_operations import get_authenticated_service, fetch_videos_from_play
 from video_processing import process_video, classify_video, process_cooking_video
 from database_operations import get_playlist_map, get_all_videos, insert_into_firebase
 from firebase_init import initialize_firebase
-from js_operations import add_watchlater_to_temp, deselect_cooking_videos
+from js_operations import deselect_cooking_videos
 from pinecone_operations import initialize_pinecone, embed_and_store_in_pinecone
 from config import OPENAI_API_KEY
 import openai
@@ -20,7 +20,6 @@ def main():
     logging.info("Starting video processing script")
     try:
         # Run JavaScript operations
-        add_watchlater_to_temp()
 
         # Setup
         db = initialize_firebase()
