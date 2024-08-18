@@ -1,5 +1,5 @@
 from playwright.sync_api import sync_playwright
-from config import PROFILE_PATH
+from src.config import PROFILE_PATH
 
 def add_watchlater_to_temp():
     with sync_playwright() as p:
@@ -232,22 +232,3 @@ def deselect_cooking_videos():
         page.wait_for_function("window.scriptCompleted")
         browser.close()
 
-
-# def execute_js_function(js_function):
-#     chrome_options = webdriver.ChromeOptions()
-#     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-#     chrome_options.add_experimental_option('useAutomationExtension', False)
-#     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-#     chrome_options.add_argument(f"user-data-dir={PROFILE_PATH}")
-
-#     driver = webdriver.Chrome(options=chrome_options)
-#     driver.get('https://www.youtube.com/playlist?list=WL')
-
-#     # Execute the JavaScript function
-#     driver.execute_script(js_function)
-
-#     # Wait for the script to complete
-#     while not driver.execute_script("return window.scriptCompleted;"):
-#         time.sleep(1)
-
-#     driver.quit()
