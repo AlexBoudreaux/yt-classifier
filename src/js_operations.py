@@ -1,156 +1,251 @@
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import time
 import os
 
+PROFILE_PATH = "/Users/alexboudreaux/Library/Application Support/Google/Chrome/Default"
+
 def add_watchlater_to_temp():
-    chrome_options = Options()
-    chrome_options.add_argument(f"user-data-dir={os.getenv('CHROME_PROFILE_PATH')}")
-    chrome_options.add_argument("--start-maximized")
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option('useAutomationExtension', False)
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument(f"user-data-dir={PROFILE_PATH}")
 
-    service = Service(executable_path=os.getenv('CHROMEDRIVER_PATH'))
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver = webdriver.Chrome(options=chrome_options)
 
-    try:
-        driver.get("https://www.youtube.com/playlist?list=WL")
+    # # Navigate to Watch Later playlist
+    driver.get('https://www.youtube.com/playlist?list=WL')
 
-        def is_script_completed(driver):
-            return driver.execute_script("return window.scriptCompleted === true")
+    # Here's your JavaScript code as a multi-line string
+    js_code = """
+    var videoIndex = 0;
+    var consecutiveAddedCount = 0;
 
-        js_code = """
-        var videoIndex = 0;
-        var consecutiveAddedCount = 0;
+    function randomDelay(min, max) {
+        return Math.random() * (max - min) + min;
+    }
 
-        function randomDelay(min, max) {
-            return Math.random() * (max - min) + min;
+    function findStartingPoint() {
+        var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
+        if (videoIndex >= videos.length) {
+            console.log('All videos processed in findStartingPoint');
+            return;
         }
 
-        function findStartingPoint() {
-            var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
-            if (videoIndex >= videos.length) {
-                console.log('All videos processed in findStartingPoint');
-                window.scriptCompleted = true;
-                return;
-            }
+        var video = videos[videoIndex];
+        video.querySelector('#primary button[aria-label="Action menu"]').click();
 
-            var video = videos[videoIndex];
-            video.querySelector('#primary button[aria-label="Action menu"]').click();
+        setTimeout(function() {
+            var saveButton = document.evaluate(
+                '//yt-formatted-string[contains(text(),"Save to playlist")]',
+                document,
+                null,
+                XPathResult.FIRST_ORDERED_NODE_TYPE,
+                null
+            ).singleNodeValue;
 
-            setTimeout(function() {
-                var saveButton = document.evaluate(
-                    '//yt-formatted-string[contains(text(),"Save to playlist")]',
-                    document,
-                    null,
-                    XPathResult.FIRST_ORDERED_NODE_TYPE,
-                    null
-                ).singleNodeValue;
+            if (saveButton) {
+                saveButton.click();
 
-                if (saveButton) {
-                    saveButton.click();
+                setTimeout(function() {
+                    var tempPlaylistCheckbox = document.evaluate(
+                        '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
+                        document,
+                        null,
+                        XPathResult.FIRST_ORDERED_NODE_TYPE,
+                        null
+                    ).singleNodeValue;
 
-                    setTimeout(function() {
-                        var tempPlaylistCheckbox = document.evaluate(
-                            '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
-                            document,
-                            null,
-                            XPathResult.FIRST_ORDERED_NODE_TYPE,
-                            null
-                        ).singleNodeValue;
-
-                        if (tempPlaylistCheckbox && tempPlaylistCheckbox.getAttribute('aria-checked') === 'true') {
-                            consecutiveAddedCount++;
-                            if (consecutiveAddedCount >= 5) {
-                                console.log('Found starting point at video index:', videoIndex - 4); // Adjusting for 0-based index and to go 5 videos up
-                                videoIndex -= 5;  // Adjust to the starting point for adding videos
-                                addVideosToTemp();  // Start the second function
-                                return;
-                            }
-                        } else {
-                            consecutiveAddedCount = 0;  // Reset the counter if a video not in Temp Playlist is found
+                    if (tempPlaylistCheckbox && tempPlaylistCheckbox.getAttribute('aria-checked') === 'true') {
+                        consecutiveAddedCount++;
+                        if (consecutiveAddedCount >= 5) {
+                            console.log('Found starting point at video index:', videoIndex - 4); // Adjusting for 0-based index and to go 5 videos up
+                            videoIndex -= 5;  // Adjust to the starting point for adding videos
+                            addVideosToTemp();  // Start the second function
+                            return;
                         }
-                        videoIndex++;
-                        findStartingPoint();
-                    }, randomDelay(1000, 2000));
-                } else {
-                    console.log('Save to playlist button not found at video index:', videoIndex);
+                    } else {
+                        consecutiveAddedCount = 0;  // Reset the counter if a video not in Temp Playlist is found
+                    }
                     videoIndex++;
                     findStartingPoint();
-                }
-            }, randomDelay(1000, 2000));
-        }
-
-        function addVideosToTemp() {
-            if (videoIndex < 0) {
-                console.log('All videos processed');
-                window.scriptCompleted = true;
-                return;
+                }, randomDelay(1000, 2000));
+            } else {
+                console.log('Save to playlist button not found at video index:', videoIndex);
+                videoIndex++;
+                findStartingPoint();
             }
+        }, randomDelay(1000, 2000));
+    }
 
-            var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
-            var video = videos[videoIndex];
-            video.querySelector('#primary button[aria-label="Action menu"]').click();
-
-            setTimeout(function() {
-                var saveButton = document.evaluate(
-                    '//yt-formatted-string[contains(text(),"Save to playlist")]',
-                    document,
-                    null,
-                    XPathResult.FIRST_ORDERED_NODE_TYPE,
-                    null
-                ).singleNodeValue;
-
-                if (saveButton) {
-                    saveButton.click();
-
-                    setTimeout(function() {
-                        var tempPlaylistButton = document.evaluate(
-                            '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
-                            document,
-                            null,
-                            XPathResult.FIRST_ORDERED_NODE_TYPE,
-                            null
-                        ).singleNodeValue;
-
-                        if (tempPlaylistButton) {
-                            tempPlaylistButton.click();
-
-                            setTimeout(function() {
-                                var exitButton = document.querySelector('button[aria-label="Cancel"]');
-                                if (exitButton) {
-                                    exitButton.click();
-                                    videoIndex--;
-                                    addVideosToTemp();  // Move to the previous video and continue
-                                } else {
-                                    console.log('Exit button not found');
-                                }
-                            }, randomDelay(1000, 2000));
-                        } else {
-                            console.log('Temp Playlist button not found');
-                        }
-                    }, randomDelay(1000, 2000));
-                } else {
-                    console.log('Save to playlist button not found');
-                }
-            }, randomDelay(1000, 2000));
+    function addVideosToTemp() {
+        if (videoIndex < 0) {
+            console.log('All videos processed');
+            window.scriptCompleted = true;
+            return;
         }
 
-        findStartingPoint();  // Start the first function
-        """
+        var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
+        var video = videos[videoIndex];
+        video.querySelector('#primary button[aria-label="Action menu"]').click();
 
-        driver.execute_script(js_code)
+        setTimeout(function() {
+            var saveButton = document.evaluate(
+                '//yt-formatted-string[contains(text(),"Save to playlist")]',
+                document,
+                null,
+                XPathResult.FIRST_ORDERED_NODE_TYPE,
+                null
+            ).singleNodeValue;
 
-        try:
-            WebDriverWait(driver, 600).until(is_script_completed)
-        except TimeoutException:
-            print("Script did not complete within the expected time.")
+            if (saveButton) {
+                saveButton.click();
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        driver.quit()
+                setTimeout(function() {
+                    var tempPlaylistButton = document.evaluate(
+                        '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
+                        document,
+                        null,
+                        XPathResult.FIRST_ORDERED_NODE_TYPE,
+                        null
+                    ).singleNodeValue;
+
+                    if (tempPlaylistButton) {
+                        tempPlaylistButton.click();
+
+                        setTimeout(function() {
+                            var exitButton = document.querySelector('button[aria-label="Cancel"]');
+                            if (exitButton) {
+                                exitButton.click();
+                                videoIndex--;
+                                addVideosToTemp();  // Move to the previous video and continue
+                            } else {
+                                console.log('Exit button not found');
+                            }
+                        }, randomDelay(1000, 2000));
+                    } else {
+                        console.log('Temp Playlist button not found');
+                    }
+                }, randomDelay(1000, 2000));
+            } else {
+                console.log('Save to playlist button not found');
+            }
+        }, randomDelay(1000, 2000));
+    }
+
+    findStartingPoint();  // Start the first function
+    """
+
+    # Execute the JavaScript code
+    driver.execute_script(js_code)
+
+    def is_script_completed():
+        return driver.execute_script("return window.scriptCompleted;")
+
+    # Wait for the JavaScript code to complete
+    while not is_script_completed():
+        time.sleep(1)  # Check every second
+
+def deselect_cooking_videos():
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option('useAutomationExtension', False)
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument(f"user-data-dir={PROFILE_PATH}")
+
+    driver = webdriver.Chrome(options=chrome_options)
+
+    # # Navigate to Watch Later playlist
+    driver.get('https://www.youtube.com/playlist?list=WL')
+
+    # Here's your JavaScript code as a multi-line string
+    js_code = """
+    var videoIndex = 0;
+    var cookingVideosRemoved = 0;
+
+    function randomDelay(min, max) {
+    return Math.random() * (max - min) + min;
+    }
+
+    function deselectWatchLater() {
+    var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
+    if (videoIndex >= videos.length) {
+        console.log('All videos processed');
+        console.log('Total cooking videos removed from Watch Later:', cookingVideosRemoved);
+        return;
+    }
+    var video = videos[videoIndex];
+    video.querySelector('#primary button[aria-label="Action menu"]').click();
+    setTimeout(() => {
+        var saveButton = document.evaluate(
+        '//yt-formatted-string[contains(text(),"Save to playlist")]',
+        document,
+        null,
+        XPathResult.FIRST_ORDERED_NODE_TYPE,
+        null
+        ).singleNodeValue;
+        if (saveButton) {
+        saveButton.click();
+        setTimeout(() => {
+            var cookingPlaylistCheckbox = document.evaluate(
+            '//yt-formatted-string[contains(text(),"Cooking")]/ancestor::tp-yt-paper-checkbox',
+            document,
+            null,
+            XPathResult.FIRST_ORDERED_NODE_TYPE,
+            null
+            ).singleNodeValue;
+            if (cookingPlaylistCheckbox && cookingPlaylistCheckbox.getAttribute('aria-checked') === 'true') {
+            var watchLaterCheckbox = document.querySelector('ytd-playlist-add-to-option-renderer tp-yt-paper-checkbox[checked] #label[title="Watch later"]');
+            if (watchLaterCheckbox) {
+                watchLaterCheckbox.click();
+                console.log('Cooking video removed from Watch Later at index:', videoIndex);
+                cookingVideosRemoved++;
+                setTimeout(() => {
+                var closeButton = document.querySelector('yt-icon-button[icon="close"], button[aria-label="Close"]');
+                if (!closeButton) {
+                    closeButton = document.querySelector('button[aria-label="Cancel"]');
+                }
+                if (closeButton) {
+                    closeButton.click();
+                }
+                videoIndex++;
+                setTimeout(deselectWatchLater, randomDelay(1000, 2000)); // Process next video after a delay
+                }, randomDelay(500, 1500)); // Wait for the checkbox interaction
+            } else {
+                closeSaveMenuAndProceed();
+            }
+            } else {
+            closeSaveMenuAndProceed();
+            }
+        }, randomDelay(1000, 2000));
+        } else {
+        videoIndex++;
+        deselectWatchLater();
+        }
+    }, randomDelay(500, 1000));
+    }
+
+    function closeSaveMenuAndProceed() {
+    var closeButton = document.querySelector('yt-icon-button[icon="close"], button[aria-label="Close"]');
+    if (!closeButton) {
+        closeButton = document.querySelector('button[aria-label="Cancel"]');
+    }
+    if (closeButton) {
+        closeButton.click();
+    }
+    videoIndex++;
+    setTimeout(deselectWatchLater, randomDelay(1000, 2000)); // Proceed to next video after a delay
+    }
+
+    deselectWatchLater(); // Start the script
+    """
+
+    # Execute the JavaScript code
+    driver.execute_script(js_code)
+
+    def is_script_completed():
+        return driver.execute_script("return window.scriptCompleted;")
+
+    # Wait for the JavaScript code to complete
+    while not is_script_completed():
+        time.sleep(1)  # Check every second
