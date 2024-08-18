@@ -28,7 +28,8 @@ class TestPineconeOperations(unittest.TestCase):
             'transcript': 'Test Transcript'
         }
         embed_and_store_in_pinecone(mock_index_instance, video_data)
-        mock_index_instance.upsert.assert_called()
+        embed_and_store_in_pinecone(mock_index_instance, video_data)
+        mock_index_instance.upsert.assert_called_once()
         mock_index_instance.upsert.return_value = None
         mock_openai.return_value.create.return_value = {'data': [{'embedding': [0.1, 0.2, 0.3]}]}
         video_data = {
