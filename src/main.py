@@ -50,7 +50,7 @@ def main():
             # Process video
             video_data = process_video(video_id, snippet)
             classification_result = classify_video(video_data)
-            category = classification_result.split('<video_classification>')[1].split('</video_classification>')[0].strip()
+            category = classification_result.split('<video_classification>')[1].split('</video_classification>')[0].strip().strip('"')
             logging.info(f"Classified as: {category}")
 
             if category.lower() == "cooking":
