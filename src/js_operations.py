@@ -1,21 +1,15 @@
-from selenium import webdriver
-import time
+from playwright.sync_api import sync_playwright
 from config import PROFILE_PATH
 
 def add_watchlater_to_temp():
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    chrome_options.add_experimental_option('useAutomationExtension', False)
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_argument(f"user-data-dir={PROFILE_PATH}")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        context = browser.new_context(user_data_dir=PROFILE_PATH)
+        page = context.new_page()
+        page.goto('https://www.youtube.com/playlist?list=WL')
 
-    driver = webdriver.Chrome(options=chrome_options)
-
-    # # Navigate to Watch Later playlist
-    driver.get('https://www.youtube.com/playlist?list=WL')
-
-    # Here's your JavaScript code as a multi-line string
-    js_code = """
+        # Here's your JavaScript code as a multi-line string
+        js_code = """
     var videoIndex = 0;
     var consecutiveAddedCount = 0;
 
@@ -134,31 +128,23 @@ def add_watchlater_to_temp():
     findStartingPoint();  // Start the first function
     """
 
-    # Execute the JavaScript code
-    driver.execute_script(js_code)
+        # Execute the JavaScript code
+        page.evaluate(js_code)
 
-    def is_script_completed():
-        return driver.execute_script("return window.scriptCompleted;")
-
-    # Wait for the JavaScript code to complete
-    while not is_script_completed():
-        time.sleep(1)  # Check every second
+        # Wait for the JavaScript code to complete
+        page.wait_for_function("window.scriptCompleted")
+        browser.close()
 
 
 def deselect_cooking_videos():
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    chrome_options.add_experimental_option('useAutomationExtension', False)
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_argument(f"user-data-dir={PROFILE_PATH}")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        context = browser.new_context(user_data_dir=PROFILE_PATH)
+        page = context.new_page()
+        page.goto('https://www.youtube.com/playlist?list=WL')
 
-    driver = webdriver.Chrome(options=chrome_options)
-
-    # # Navigate to Watch Later playlist
-    driver.get('https://www.youtube.com/playlist?list=WL')
-
-    # Here's your JavaScript code as a multi-line string
-    js_code = """
+        # Here's your JavaScript code as a multi-line string
+        js_code = """
     var videoIndex = 0;
     var cookingVideosRemoved = 0;
 
@@ -239,15 +225,12 @@ def deselect_cooking_videos():
     deselectWatchLater(); // Start the script
     """
 
-    # Execute the JavaScript code
-    driver.execute_script(js_code)
+        # Execute the JavaScript code
+        page.evaluate(js_code)
 
-    def is_script_completed():
-        return driver.execute_script("return window.scriptCompleted;")
-
-    # Wait for the JavaScript code to complete
-    while not is_script_completed():
-        time.sleep(1)  # Check every second
+        # Wait for the JavaScript code to complete
+        page.wait_for_function("window.scriptCompleted")
+        browser.close()
 
 
 # def execute_js_function(js_function):
