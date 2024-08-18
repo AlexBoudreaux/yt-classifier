@@ -55,8 +55,8 @@ def main():
 
             # Process video
             try:
-                video_data = process_video(video_id, snippet)
-                classification_result = classify_video(video_data)
+                video_data = retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(process_video)(video_id, snippet)
+                classification_result = retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(classify_video)(video_data)
             except Exception as e:
                 logging.error(f"Error processing or classifying video {video_id}: {str(e)}", exc_info=True)
                 continue
@@ -68,7 +68,7 @@ def main():
                 video_data["url"] = f"https://www.youtube.com/watch?v={video_id}"
                 try:
                     try:
-                        video_data = process_cooking_video(video_data)
+                        video_data = retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(process_cooking_video)(video_data)
                     except Exception as e:
                         logging.error(f"Error in process_cooking_video for video {video_id}: {str(e)}", exc_info=True)
                         continue
