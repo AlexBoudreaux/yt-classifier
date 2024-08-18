@@ -3,9 +3,13 @@ import openai
 import logging
 from config import PINECONE_API_KEY
 
+from tenacity import retry, stop_after_attempt, wait_fixed
+
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def initialize_pinecone():
     return Pinecone(api_key=PINECONE_API_KEY)
 
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def embed_and_store_in_pinecone(pinecone, video_data, max_tokens=8192, model="text-embedding-ada-002"):
     index_name = "recipes"
     index = pinecone.Index(index_name)

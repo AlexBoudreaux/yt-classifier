@@ -1,5 +1,6 @@
 from selenium import webdriver
 import time
+from tenacity import retry, stop_after_attempt, wait_fixed
 import os
 import logging
 
@@ -20,7 +21,7 @@ def add_watchlater_to_temp():
 
     try:
         # Navigate to Watch Later playlist
-        driver.get('https://www.youtube.com/playlist?list=WL')
+        retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(driver.get)('https://www.youtube.com/playlist?list=WL')
     except Exception as e:
         logging.error(f"Error navigating to Watch Later playlist: {str(e)}", exc_info=True)
         driver.quit()

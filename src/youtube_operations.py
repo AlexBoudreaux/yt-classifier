@@ -4,6 +4,9 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
+from tenacity import retry, stop_after_attempt, wait_fixed
+
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def get_authenticated_service():
     SCOPES = ["https://www.googleapis.com/auth/youtube.force-ssl"]
     creds = None
@@ -19,6 +22,7 @@ def get_authenticated_service():
             token.write(creds.to_json())
     return build("youtube", "v3", credentials=creds)
 
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def fetch_videos_from_playlist(youtube, playlist_id):
     videos = []
     request = youtube.playlistItems().list(
@@ -37,6 +41,7 @@ def fetch_videos_from_playlist(youtube, playlist_id):
         ) if 'nextPageToken' in response else None
     return videos
 
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def add_to_playlist(youtube, video_id, playlist_id, video_title):
     videos = fetch_videos_from_playlist(youtube, playlist_id)
     
@@ -64,6 +69,7 @@ def add_to_playlist(youtube, video_id, playlist_id, video_title):
 def print_video(video_title, category):
     print(f"[green]✓[/green] [bold blue]{video_title}[/bold blue]   ->   playlist: [magenta]{category}[/magenta]")
 
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def video_exists_in_playlists(youtube, playlist_map, video_id):
     for playlist in playlist_map.values():
         try:

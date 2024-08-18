@@ -1,4 +1,5 @@
 import logging
+from tenacity import retry, stop_after_attempt, wait_fixed
 from youtube_operations import get_authenticated_service, fetch_videos_from_playlist, add_to_playlist, print_video, video_exists_in_playlists
 from video_processing import process_video, classify_video, process_cooking_video
 from database_operations import get_playlist_map, get_all_videos, insert_into_firebase
@@ -21,9 +22,9 @@ def main():
     try:
         # Setup
         try:
-            db = initialize_firebase()
-            youtube = get_authenticated_service()
-            pinecone = initialize_pinecone()
+            db = retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(initialize_firebase)()
+            youtube = retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(get_authenticated_service)()
+            pinecone = retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(initialize_pinecone)()
         except Exception as e:
             logging.error(f"Error during setup: {str(e)}", exc_info=True)
             return
@@ -37,7 +38,7 @@ def main():
 
         # Fetch videos from temp playlist
         try:
-            temp_videos = fetch_videos_from_playlist(youtube, temp_playlist_id)[::-1]
+            temp_videos = retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(fetch_videos_from_playlist)(youtube, temp_playlist_id)[::-1]
         except Exception as e:
             logging.error(f"Error fetching videos from playlist: {str(e)}", exc_info=True)
             return
@@ -78,7 +79,7 @@ def main():
 
                 try:
                     try:
-                        embed_and_store_in_pinecone(pinecone, video_data)
+                        retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(embed_and_store_in_pinecone)(pinecone, video_data)
                     except Exception as e:
                         logging.error(f"Error in embed_and_store_in_pinecone for video {video_id}: {str(e)}", exc_info=True)
                         continue
@@ -96,8 +97,8 @@ def main():
 
                 try:
                     try:
-                        if add_to_playlist(youtube, video_id, target_playlist['playlist_id'], video_data["title"]):
-                            insert_into_firebase(db, video_data)
+                        if retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(add_to_playlist)(youtube, video_id, target_playlist['playlist_id'], video_data["title"]):
+                            retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(insert_into_firebase)(db, video_data)
                             print_video(snippet.get('title'), category)
                             logging.info("Video added to playlist and inserted into Firebase")
                         else:

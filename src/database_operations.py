@@ -1,5 +1,8 @@
 from datetime import datetime
 
+from tenacity import retry, stop_after_attempt, wait_fixed
+
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def get_playlist_map(db):
     playlists_ref = db.collection('playlists')
     playlists = playlists_ref.get()
@@ -12,6 +15,7 @@ def get_playlist_map(db):
         }
     return playlist_map
 
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def get_all_videos(db):
     videos_ref = db.collection('videos')
     videos = videos_ref.get()
