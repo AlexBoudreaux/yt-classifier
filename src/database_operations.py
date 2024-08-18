@@ -35,7 +35,7 @@ def insert_into_firebase(db, video_data):
         "playlist_id": video_data['playlist_id'],
         "video_id": video_data['video_id'],
         "video_name": video_data['title'],
-        "creator": video_data['creator'],
+        "creator": video_data.get('creator', 'Unknown'),  # Ensure creator is stored, default to 'Unknown' if not present
         "description": video_data['description'],
         "transcript": video_data['transcript'],
         "summary": video_data['summary'],
