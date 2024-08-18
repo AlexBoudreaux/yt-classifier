@@ -1,12 +1,13 @@
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
+import asyncio
 from src.config import PROFILE_PATH
 
-def add_watchlater_to_temp():
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        context = browser.new_context(user_data_dir=PROFILE_PATH)
-        page = context.new_page()
-        page.goto('https://www.youtube.com/playlist?list=WL')
+async def add_watchlater_to_temp():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False)
+        context = await browser.new_context(user_data_dir=PROFILE_PATH)
+        page = await context.new_page()
+        await page.goto('https://www.youtube.com/playlist?list=WL')
 
         # Here's your JavaScript code as a multi-line string
         js_code = """
@@ -129,19 +130,19 @@ def add_watchlater_to_temp():
     """
 
         # Execute the JavaScript code
-        page.evaluate(js_code)
+        await page.evaluate(js_code)
 
         # Wait for the JavaScript code to complete
-        page.wait_for_function("window.scriptCompleted")
-        browser.close()
+        await page.wait_for_function("window.scriptCompleted")
+        await browser.close()
 
 
-def deselect_cooking_videos():
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        context = browser.new_context(user_data_dir=PROFILE_PATH)
-        page = context.new_page()
-        page.goto('https://www.youtube.com/playlist?list=WL')
+async def deselect_cooking_videos():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False)
+        context = await browser.new_context(user_data_dir=PROFILE_PATH)
+        page = await context.new_page()
+        await page.goto('https://www.youtube.com/playlist?list=WL')
 
         # Here's your JavaScript code as a multi-line string
         js_code = """
@@ -226,9 +227,9 @@ def deselect_cooking_videos():
     """
 
         # Execute the JavaScript code
-        page.evaluate(js_code)
+        await page.evaluate(js_code)
 
         # Wait for the JavaScript code to complete
-        page.wait_for_function("window.scriptCompleted")
-        browser.close()
+        await page.wait_for_function("window.scriptCompleted")
+        await browser.close()
 
