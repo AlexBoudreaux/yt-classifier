@@ -67,6 +67,8 @@ def classify_video(video_data):
                 "role": "system",
                 "content": """You are a Youtube Video Classifier. Your task is to classify a given video into one of the following categories:
 
+                    "Cooking"
+                    <description>Videos about cooking. This category includes recipes, cooking tips, and cooking techniques. Key indicators include cooking terminology, cooking tips, and cooking techniques.</description>
                     "Development/AI"
                     <description>Content related to computer science, artificial intelligence, web development, and related news or tools. This category covers programming tutorials, AI advancements, development tool reviews, and tech industry updates. Key indicators include coding terminology, AI concepts, and discussions of software development practices.</description>
                     "Podcast/Comedy"
@@ -96,7 +98,7 @@ def classify_video(video_data):
                     [Your one-word classification here]
                     </video_classification>
 
-                    Use the following <scratchpad> to reason about the classification in your response:
+                    Use the following template of a <scratchpad> to reason about the classification in your response (give the scratchpad and your thoughts as well as the video classification in your answer):
 
                     <scratchpad>
                     1. What is the main topic of the video?
