@@ -21,7 +21,6 @@ class TestMain(unittest.TestCase):
         mock_initialize_pinecone.return_value = MagicMock()
         mock_fetch_videos_from_playlist.return_value = [{'snippet': {'resourceId': {'videoId': '123'}, 'title': 'Test Video'}}]
         main()
-        main()
         mock_fetch_videos_from_playlist.assert_called_once()
         mock_process_video.return_value = {'video_id': '123', 'title': 'Test Video', 'description': 'Test Description', 'transcript': 'Test Transcript', 'summary': 'Test Summary'}
         mock_classify_video.return_value = '<video_classification>cooking</video_classification>'
