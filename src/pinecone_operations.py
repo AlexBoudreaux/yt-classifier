@@ -22,7 +22,7 @@ def embed_and_store_in_pinecone(pinecone, video_data, max_tokens=8192, model="te
         combined_text = ' '.join(tokens[:max_tokens])
     
     try:
-        response = retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(openai.Embedding.create)(
+        response = openai.Embedding.create(
             input=[combined_text],
             model=model
         )

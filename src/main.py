@@ -55,8 +55,8 @@ def main():
 
             # Process video
             try:
-                video_data = retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(process_video)(video_id, snippet)
-                classification_result = retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(classify_video)(video_data)
+                video_data = process_video(video_id, snippet)
+                classification_result = classify_video(video_data)
             except Exception as e:
                 logging.error(f"Error processing or classifying video {video_id}: {str(e)}", exc_info=True)
                 continue
@@ -68,7 +68,7 @@ def main():
                 video_data["url"] = f"https://www.youtube.com/watch?v={video_id}"
                 try:
                     try:
-                        video_data = retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(process_cooking_video)(video_data)
+                        video_data = process_cooking_video(video_data)
                     except Exception as e:
                         logging.error(f"Error in process_cooking_video for video {video_id}: {str(e)}", exc_info=True)
                         continue
@@ -79,7 +79,7 @@ def main():
 
                 try:
                     try:
-                        retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(embed_and_store_in_pinecone)(pinecone, video_data)
+                        embed_and_store_in_pinecone(pinecone, video_data)
                     except Exception as e:
                         logging.error(f"Error in embed_and_store_in_pinecone for video {video_id}: {str(e)}", exc_info=True)
                         continue
@@ -98,7 +98,7 @@ def main():
                 try:
                     try:
                         if retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(add_to_playlist)(youtube, video_id, target_playlist['playlist_id'], video_data["title"]):
-                            retry(stop=stop_after_attempt(3), wait=wait_fixed(2))(insert_into_firebase)(db, video_data)
+                            insert_into_firebase(db, video_data)
                             print_video(snippet.get('title'), category)
                             logging.info("Video added to playlist and inserted into Firebase")
                         else:
