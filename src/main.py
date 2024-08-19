@@ -48,12 +48,9 @@ def main():
             snippet = video.get('snippet', {})
             video_id = snippet.get('resourceId', {}).get('videoId', '')
 
+            if not video_id:
+                logging.error("Video ID not found in snippet.")
                 continue
-
-            # Initialize video_data
-            video_data = {}
-
-            # Process video
 
             # Initialize video_data
             video_data = {}
