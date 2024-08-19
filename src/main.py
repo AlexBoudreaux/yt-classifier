@@ -1,12 +1,12 @@
 import logging
 from tenacity import retry, stop_after_attempt, wait_fixed
-from src.youtube_operations import get_authenticated_service, fetch_videos_from_playlist, add_to_playlist, print_video, video_exists_in_playlists
-from src.video_processing import process_video, classify_video, process_cooking_video
-from src.database_operations import get_playlist_map, get_all_videos, insert_into_firebase
-from src.firebase_init import initialize_firebase
-from src.js_operations import deselect_cooking_videos
-from src.pinecone_operations import initialize_pinecone, embed_and_store_in_pinecone
-from src.config import OPENAI_API_KEY
+from youtube_operations import get_authenticated_service, fetch_videos_from_playlist, add_to_playlist, print_video, video_exists_in_playlists
+from video_processing import process_video, classify_video, process_cooking_video
+from database_operations import get_playlist_map, get_all_videos, insert_into_firebase
+from firebase_init import initialize_firebase
+from js_operations import deselect_cooking_videos
+from pinecone_operations import initialize_pinecone, embed_and_store_in_pinecone
+from config import OPENAI_API_KEY
 import openai
 import json
 
@@ -42,26 +42,38 @@ def main():
         except Exception as e:
             logging.error(f"Error fetching videos from playlist: {str(e)}", exc_info=True)
             return
+        logging.info(f"Fetched {len(temp_videos)} videos from Temp Playlist")
         for video in temp_videos:
+            logging.info(f"Processing video: {video.get('snippet', {}).get('title', 'Unknown Title')}")
             snippet = video.get('snippet', {})
             video_id = snippet.get('resourceId', {}).get('videoId', '')
 
-            if snippet.get('title') in ["Private video", "Deleted video"] or not video_id:
                 continue
 
-            # Check if video already exists in any playlist
-            if video_exists_in_playlists(youtube, playlist_map, video_id):
-                continue
+            # Initialize video_data
+            video_data = {}
+
+            # Process video
+
+            # Initialize video_data
+            video_data = {}
 
             # Process video
             try:
                 video_data = process_video(video_id, snippet)
                 classification_result = classify_video(video_data)
+                logging.info(f"Processed video data: {json.dumps(video_data, indent=2)}")
             except Exception as e:
                 logging.error(f"Error processing or classifying video {video_id}: {str(e)}", exc_info=True)
+                logging.error(f"Error processing or classifying video {video_id}: {str(e)}", exc_info=True)
                 continue
-            category = classification_result.split('<video_classification>')[1].split('</video_classification>')[0].strip().strip('"')
-            logging.info(f"Classified as: {category}")
+
+            try:
+                category = classification_result.split('<video_classification>')[1].split('</video_classification>')[0].strip().strip('"')
+                logging.info(f"Classified as: {category}")
+            except Exception as e:
+                logging.error(f"Error extracting category for video {video_id}: {str(e)}", exc_info=True)
+                continue
 
             if category.lower() == "cooking":
                 logging.info("Entering cooking video processing")
@@ -112,7 +124,9 @@ def main():
             else:
                 logging.warning(f"No target playlist found for category: {category}")
 
+        logging.info("Starting to deselect cooking videos")
         deselect_cooking_videos()
+        logging.info("Completed deselecting cooking videos")
     
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}", exc_info=True)
