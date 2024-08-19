@@ -65,7 +65,6 @@ def main():
                 logging.info(f"Processed video data: {json.dumps(video_data, indent=2)}")
             except Exception as e:
                 logging.error(f"Error processing or classifying video {video_id}: {str(e)}", exc_info=True)
-                logging.error(f"Error processing or classifying video {video_id}: {str(e)}", exc_info=True)
                 continue
 
             try:
