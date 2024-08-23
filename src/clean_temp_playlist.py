@@ -28,8 +28,9 @@ def get_authenticated_service():
 def clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True):
     videos_to_remove = []
     next_page_token = None
+    target_found = False
 
-    while True:
+    while not target_found:
         request = youtube.playlistItems().list(
             part="snippet",
             playlistId=playlist_id,
@@ -44,13 +45,13 @@ def clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True):
             video_creator = item['snippet']['videoOwnerChannelTitle']
             videos_to_remove.append((item['id'], video_title, video_creator))
             if video_id == target_video_id:
+                target_found = True
                 break
-        else:
+
+        if not target_found:
             next_page_token = response.get('nextPageToken')
             if not next_page_token:
                 break
-            continue
-        break
 
     total_videos = len(videos_to_remove)
     print(f"Found {total_videos} videos that would be removed.")
