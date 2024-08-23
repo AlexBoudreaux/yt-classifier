@@ -26,9 +26,9 @@ def get_authenticated_service():
     return googleapiclient.discovery.build('youtube', 'v3', credentials=credentials)
 
 def clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True):
-    next_page_token = None
     videos_to_remove = []
     target_found = False
+    next_page_token = None
 
     while not target_found:
         request = youtube.playlistItems().list(
@@ -52,9 +52,12 @@ def clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True):
         if not next_page_token:
             break
 
+    # Reverse the list to process oldest videos first
+    videos_to_remove.reverse()
+
     total_videos = len(videos_to_remove)
     print(f"Found {total_videos} videos that would be removed.")
-    print("\nFirst 5 videos that would be deleted:")
+    print("\nFirst 5 videos that would be deleted (oldest first):")
     for i, (item_id, title, creator) in enumerate(videos_to_remove[:5], 1):
         print(f"{i}. '{title}' by {creator}")
     
