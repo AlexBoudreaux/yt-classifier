@@ -42,21 +42,26 @@ def clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True):
         for item in response['items']:
             video_id = item['snippet']['resourceId']['videoId']
             video_title = item['snippet']['title']
+            video_creator = item['snippet']['videoOwnerChannelTitle']
             if video_id == target_video_id:
                 target_found = True
                 break
-            videos_to_remove.append((item['id'], video_title))
+            videos_to_remove.append((item['id'], video_title, video_creator))
 
         next_page_token = response.get('nextPageToken')
         if not next_page_token:
             break
 
-    print(f"Found {len(videos_to_remove)} videos that would be removed.")
+    total_videos = len(videos_to_remove)
+    print(f"Found {total_videos} videos that would be removed.")
+    print("\nFirst 5 videos that would be deleted:")
+    for i, (item_id, title, creator) in enumerate(videos_to_remove[:5], 1):
+        print(f"{i}. '{title}' by {creator}")
+    
+    print(f"\nTotal number of videos that would be deleted: {total_videos}")
 
-    for item_id, title in videos_to_remove:
-        if dry_run:
-            print(f"Would remove video: '{title}' with playlist item ID: {item_id}")
-        else:
+    if not dry_run:
+        for item_id, title, _ in videos_to_remove:
             try:
                 youtube.playlistItems().delete(id=item_id).execute()
                 print(f"Removed video: '{title}' with playlist item ID: {item_id}")
