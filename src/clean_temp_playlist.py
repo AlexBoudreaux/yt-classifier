@@ -27,10 +27,9 @@ def get_authenticated_service():
 
 def clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True):
     videos_to_remove = []
-    target_found = False
     next_page_token = None
 
-    while not target_found:
+    while True:
         request = youtube.playlistItems().list(
             part="snippet",
             playlistId=playlist_id,
@@ -43,21 +42,19 @@ def clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True):
             video_id = item['snippet']['resourceId']['videoId']
             video_title = item['snippet']['title']
             video_creator = item['snippet']['videoOwnerChannelTitle']
-            if video_id == target_video_id:
-                target_found = True
-                break
             videos_to_remove.append((item['id'], video_title, video_creator))
-
-        next_page_token = response.get('nextPageToken')
-        if not next_page_token:
-            break
-
-    # Reverse the list to process oldest videos first
-    videos_to_remove.reverse()
+            if video_id == target_video_id:
+                break
+        else:
+            next_page_token = response.get('nextPageToken')
+            if not next_page_token:
+                break
+            continue
+        break
 
     total_videos = len(videos_to_remove)
     print(f"Found {total_videos} videos that would be removed.")
-    print("\nFirst 5 videos that would be deleted (oldest first):")
+    print("\nFirst 5 videos that would be deleted:")
     for i, (item_id, title, creator) in enumerate(videos_to_remove[:5], 1):
         print(f"{i}. '{title}' by {creator}")
     
