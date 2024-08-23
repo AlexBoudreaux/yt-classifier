@@ -25,7 +25,7 @@ def get_authenticated_service():
 
     return googleapiclient.discovery.build('youtube', 'v3', credentials=credentials)
 
-def clean_temp_playlist(youtube, playlist_id, target_video_id):
+def clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True):
     next_page_token = None
     videos_to_remove = []
     target_found = False
@@ -41,23 +41,27 @@ def clean_temp_playlist(youtube, playlist_id, target_video_id):
 
         for item in response['items']:
             video_id = item['snippet']['resourceId']['videoId']
+            video_title = item['snippet']['title']
             if video_id == target_video_id:
                 target_found = True
                 break
-            videos_to_remove.append(item['id'])
+            videos_to_remove.append((item['id'], video_title))
 
         next_page_token = response.get('nextPageToken')
         if not next_page_token:
             break
 
-    print(f"Found {len(videos_to_remove)} videos to remove.")
+    print(f"Found {len(videos_to_remove)} videos that would be removed.")
 
-    for item_id in videos_to_remove:
-        try:
-            youtube.playlistItems().delete(id=item_id).execute()
-            print(f"Removed video with playlist item ID: {item_id}")
-        except googleapiclient.errors.HttpError as e:
-            print(f"An error occurred: {e}")
+    for item_id, title in videos_to_remove:
+        if dry_run:
+            print(f"Would remove video: '{title}' with playlist item ID: {item_id}")
+        else:
+            try:
+                youtube.playlistItems().delete(id=item_id).execute()
+                print(f"Removed video: '{title}' with playlist item ID: {item_id}")
+            except googleapiclient.errors.HttpError as e:
+                print(f"An error occurred while trying to remove '{title}': {e}")
 
     print("Playlist cleaning completed.")
 
@@ -66,7 +70,17 @@ def main():
     playlist_id = "PLZyXQ3RMIWiFjebCO49yXWpZ_q555zP5u"
     target_video_id = "T0869sx7CAg"
     
-    clean_temp_playlist(youtube, playlist_id, target_video_id)
+    # Perform a dry run first
+    print("Performing dry run...")
+    clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True)
+    
+    # Ask for confirmation before actual deletion
+    user_input = input("Do you want to proceed with the actual deletion? (yes/no): ").lower()
+    if user_input == 'yes':
+        print("Proceeding with actual deletion...")
+        clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=False)
+    else:
+        print("Deletion cancelled.")
 
 if __name__ == "__main__":
     main()
