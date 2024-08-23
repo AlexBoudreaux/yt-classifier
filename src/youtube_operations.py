@@ -84,3 +84,14 @@ def video_exists_in_playlists(youtube, playlist_map, video_id):
         except Exception as e:
             print(f"Error checking playlist {playlist['playlist_id']}: {str(e)}")
     return False
+
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+def count_videos_in_playlist(youtube, playlist_id):
+    request = youtube.playlistItems().list(
+        part="id",
+        playlistId=playlist_id,
+        maxResults=50
+    )
+    response = request.execute()
+    total_videos = response['pageInfo']['totalResults']
+    return total_videos
