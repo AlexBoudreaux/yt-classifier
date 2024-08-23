@@ -75,22 +75,41 @@ def clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True):
 
     print("Playlist cleaning completed.")
 
+def count_videos_in_playlist(youtube, playlist_id):
+    request = youtube.playlistItems().list(
+        part="id",
+        playlistId=playlist_id,
+        maxResults=50
+    )
+    response = request.execute()
+    total_videos = response['pageInfo']['totalResults']
+    return total_videos
+
 def main():
     youtube = get_authenticated_service()
     playlist_id = "PLZyXQ3RMIWiFjebCO49yXWpZ_q555zP5u"
     target_video_id = "T0869sx7CAg"
     
+    # Count and log the number of videos in the temp playlist
+    video_count = count_videos_in_playlist(youtube, playlist_id)
+    print(f"Number of videos in Temp Playlist: {video_count}")
+    
     # Perform a dry run first
     print("Performing dry run...")
     clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True)
     
-    # # Ask for confirmation before actual deletion
-    # user_input = input("Do you want to proceed with the actual deletion? (yes/no): ").lower()
-    # if user_input == 'yes':
-    #     print("Proceeding with actual deletion...")
-    #     clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=False)
-    # else:
-    #     print("Deletion cancelled.")
+    # Ask for confirmation before actual deletion
+    user_input = input("Do you want to proceed with the actual deletion? (yes/no): ").lower()
+    if user_input == 'yes':
+        print("Proceeding with actual deletion...")
+        clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=False)
+        
+        # Count and log the number of videos after deletion
+        new_video_count = count_videos_in_playlist(youtube, playlist_id)
+        print(f"Number of videos in Temp Playlist after deletion: {new_video_count}")
+        print(f"Number of videos removed: {video_count - new_video_count}")
+    else:
+        print("Deletion cancelled.")
 
 if __name__ == "__main__":
     main()
