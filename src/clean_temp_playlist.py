@@ -79,13 +79,13 @@ def main():
     print("Performing dry run...")
     clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=True)
     
-    # Ask for confirmation before actual deletion
-    user_input = input("Do you want to proceed with the actual deletion? (yes/no): ").lower()
-    if user_input == 'yes':
-        print("Proceeding with actual deletion...")
-        clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=False)
-    else:
-        print("Deletion cancelled.")
+    # # Ask for confirmation before actual deletion
+    # user_input = input("Do you want to proceed with the actual deletion? (yes/no): ").lower()
+    # if user_input == 'yes':
+    #     print("Proceeding with actual deletion...")
+    #     clean_temp_playlist(youtube, playlist_id, target_video_id, dry_run=False)
+    # else:
+    #     print("Deletion cancelled.")
 
 if __name__ == "__main__":
     main()
