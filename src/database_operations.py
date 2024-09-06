@@ -54,3 +54,9 @@ def insert_into_firebase(db, video_data):
     videos_ref = db.collection('videos')
     new_video_ref = videos_ref.add(data)
     return new_video_ref[1].get().to_dict()
+
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+def get_processed_video_ids(db):
+    videos_ref = db.collection('videos')
+    videos = videos_ref.get()
+    return set(video.to_dict()['video_id'] for video in videos)

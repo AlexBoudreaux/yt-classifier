@@ -18,7 +18,7 @@ def test_single_video():
     logging.info("Starting single video test")
     try:
         # Setup
-        firebase_app, db = initialize_firebase()
+        db = initialize_firebase()
         youtube = get_authenticated_service()
         pinecone = initialize_pinecone()
 
@@ -26,7 +26,7 @@ def test_single_video():
         playlist_map = get_playlist_map(db)
         
         # Specify a test video ID
-        test_video_id = "loT3BC2PXH4"  # Replace with an actual video ID you want to test
+        test_video_id = "SVJ9WYsBBkU"  # Replace with an actual video ID you want to test
         
         # Fetch video details
         video_details = youtube.videos().list(
@@ -39,6 +39,7 @@ def test_single_video():
             return
 
         snippet = video_details['items'][0]['snippet']
+        logging.info(f"Snippet received: {snippet}")
 
         # Check if video already exists in any playlist
         if video_exists_in_playlists(youtube, playlist_map, test_video_id):
@@ -47,6 +48,8 @@ def test_single_video():
 
         # Process video
         video_data = process_video(test_video_id, snippet)
+        logging.info(f"Processed video data: {video_data}")
+
         classification_result = classify_video(video_data)
         print(classification_result)
         category = classification_result.split('<video_classification>')[1].split('</video_classification>')[0].strip().strip('"')

@@ -3,13 +3,18 @@ import openai
 import logging
 
 def process_video(video_id, snippet):
+    logging.info(f"Processing video: {video_id}")
+    logging.debug(f"Received snippet: {snippet}")
+    
     video_data = {
         'video_id': video_id,
         'title': snippet.get('title', ''),
         'description': snippet.get('description', ''),
         'creator': snippet.get('videoOwnerChannelTitle', '')
     }
-    
+
+    logging.info(f"Created video_data: {video_data}")
+
     # Transcribe video
     video_data['transcript'] = transcribe_video(video_id, video_data['title'])
     
@@ -61,7 +66,7 @@ def classify_video(video_data):
         </video_summary>
         """
         
-        classification_completion = openai.ChatCompletion.create(model="ft:gpt-4o-mini-2024-07-18:alexs-org:yt-video-classification-v2:9x23ZDo5",
+        classification_completion = openai.ChatCompletion.create(model="ft:gpt-4o-2024-08-06:alexs-org:yt-video-classification-v2:9yTouFmY",
         messages=[
             {
                 "role": "system",
@@ -92,20 +97,21 @@ def classify_video(video_data):
 
                     Analyze the content provided carefully. Consider the topic, themes, and keywords present in the title, description, transcript, and summary. Look for clear indicators that align with one of the given categories.
 
-                    After your analysis, provide your final classification. Respond with only one word, which should be one of the listed categories. Your response should be in the following format:
-
-                    <video_classification>
-                    [Your one-word classification here]
-                    </video_classification>
-
-                    Use the following template of a <scratchpad> to reason about the classification in your response (give the scratchpad and your thoughts as well as the video classification in your answer):
+                    Use the following template of a <scratchpad> to reason about the classification in your response (output your thoughts on the scratchpad as well as the video classification in your answer):
 
                     <scratchpad>
                     1. What is the main topic of the video?
                     2. Are there any keywords or themes that strongly indicate a specific category?
                     3. Does the content align clearly with one of the given categories?
                     4. If it's not clear, what are the possible categories it could fall under?
-                    </scratchpad>"""
+                    </scratchpad>
+                    
+                    After your analysis, provide your final classification. Respond with only one word, which should be one of the listed categories. Your response should be in the following format:
+
+                    <video_classification>
+                    [Your one-word classification here]
+                    </video_classification>
+                    """
             },
             {
                 "role": "user",

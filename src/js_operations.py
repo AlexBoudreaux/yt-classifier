@@ -29,122 +29,153 @@ def add_watchlater_to_temp():
 
     # Here's your JavaScript code as a multi-line string
     js_code = """
-    var videoIndex = 0;
-    var consecutiveAddedCount = 0;
-
     function randomDelay(min, max) {
         return Math.random() * (max - min) + min;
     }
 
-    function findStartingPoint() {
-        var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
-        if (videoIndex >= videos.length) {
-            console.log('All videos processed in findStartingPoint');
-            return;
-        }
+    function scrollToBottom() {
+        return new Promise((resolve) => {
+            let lastHeight = document.documentElement.scrollHeight;
+            let scrollAttempts = 0;
+            const maxScrollAttempts = 100; // Adjust this value if needed
 
-        var video = videos[videoIndex];
-        video.querySelector('#primary button[aria-label="Action menu"]').click();
-
-        setTimeout(function() {
-            var saveButton = document.evaluate(
-                '//yt-formatted-string[contains(text(),"Save to playlist")]',
-                document,
-                null,
-                XPathResult.FIRST_ORDERED_NODE_TYPE,
-                null
-            ).singleNodeValue;
-
-            if (saveButton) {
-                saveButton.click();
-
-                setTimeout(function() {
-                    var tempPlaylistCheckbox = document.evaluate(
-                        '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
-                        document,
-                        null,
-                        XPathResult.FIRST_ORDERED_NODE_TYPE,
-                        null
-                    ).singleNodeValue;
-
-                    if (tempPlaylistCheckbox && tempPlaylistCheckbox.getAttribute('aria-checked') === 'true') {
-                        consecutiveAddedCount++;
-                        if (consecutiveAddedCount >= 5) {
-                            console.log('Found starting point at video index:', videoIndex - 4); // Adjusting for 0-based index and to go 5 videos up
-                            videoIndex -= 5;  // Adjust to the starting point for adding videos
-                            addVideosToTemp();  // Start the second function
-                            return;
-                        }
+            function scroll() {
+                window.scrollTo(0, document.documentElement.scrollHeight);
+                setTimeout(() => {
+                    let newHeight = document.documentElement.scrollHeight;
+                    if (newHeight === lastHeight || scrollAttempts >= maxScrollAttempts) {
+                        resolve();
                     } else {
-                        consecutiveAddedCount = 0;  // Reset the counter if a video not in Temp Playlist is found
+                        lastHeight = newHeight;
+                        scrollAttempts++;
+                        scroll();
                     }
+                }, randomDelay(1000, 2000)); // Adjust delay as needed
+            }
+
+            scroll();
+        });
+    }
+
+    async function processVideos() {
+        await scrollToBottom();
+        console.log("Finished scrolling, all videos should be loaded.");
+
+        var videoIndex = 0;
+        var consecutiveAddedCount = 0;
+
+        function findStartingPoint() {
+            var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
+            if (videoIndex >= videos.length) {
+                console.log('All videos processed in findStartingPoint');
+                return;
+            }
+
+            var video = videos[videoIndex];
+            video.querySelector('#primary button[aria-label="Action menu"]').click();
+
+            setTimeout(function() {
+                var saveButton = document.evaluate(
+                    '//yt-formatted-string[contains(text(),"Save to playlist")]',
+                    document,
+                    null,
+                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    null
+                ).singleNodeValue;
+
+                if (saveButton) {
+                    saveButton.click();
+
+                    setTimeout(function() {
+                        var tempPlaylistCheckbox = document.evaluate(
+                            '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
+                            document,
+                            null,
+                            XPathResult.FIRST_ORDERED_NODE_TYPE,
+                            null
+                        ).singleNodeValue;
+
+                        if (tempPlaylistCheckbox && tempPlaylistCheckbox.getAttribute('aria-checked') === 'true') {
+                            consecutiveAddedCount++;
+                            if (consecutiveAddedCount >= 5) {
+                                console.log('Found starting point at video index:', videoIndex - 4);
+                                videoIndex -= 5;
+                                addVideosToTemp();
+                                return;
+                            }
+                        } else {
+                            consecutiveAddedCount = 0;
+                        }
+                        videoIndex++;
+                        findStartingPoint();
+                    }, randomDelay(300, 550));
+                } else {
+                    console.log('Save to playlist button not found at video index:', videoIndex);
                     videoIndex++;
                     findStartingPoint();
-                }, randomDelay(300, 550));
-            } else {
-                console.log('Save to playlist button not found at video index:', videoIndex);
-                videoIndex++;
-                findStartingPoint();
-            }
-        }, randomDelay(300, 550));
-    }
-
-    function addVideosToTemp() {
-        if (videoIndex < 0) {
-            console.log('All videos processed');
-            window.scriptCompleted = true;
-            return;
+                }
+            }, randomDelay(300, 550));
         }
 
-        var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
-        var video = videos[videoIndex];
-        video.querySelector('#primary button[aria-label="Action menu"]').click();
-
-        setTimeout(function() {
-            var saveButton = document.evaluate(
-                '//yt-formatted-string[contains(text(),"Save to playlist")]',
-                document,
-                null,
-                XPathResult.FIRST_ORDERED_NODE_TYPE,
-                null
-            ).singleNodeValue;
-
-            if (saveButton) {
-                saveButton.click();
-
-                setTimeout(function() {
-                    var tempPlaylistButton = document.evaluate(
-                        '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
-                        document,
-                        null,
-                        XPathResult.FIRST_ORDERED_NODE_TYPE,
-                        null
-                    ).singleNodeValue;
-
-                    if (tempPlaylistButton) {
-                        tempPlaylistButton.click();
-
-                        setTimeout(function() {
-                            var exitButton = document.querySelector('button[aria-label="Cancel"]');
-                            if (exitButton) {
-                                exitButton.click();
-                                videoIndex--;
-                                addVideosToTemp();  // Move to the previous video and continue
-                            } else {
-                                console.log('Exit button not found');
-                            }
-                        }, randomDelay(300, 550));
-                    } else {
-                        console.log('Temp Playlist button not found');
-                    }
-                }, randomDelay(300, 550));
-            } else {
-                console.log('Save to playlist button not found');
+        function addVideosToTemp() {
+            if (videoIndex < 0) {
+                console.log('All videos processed');
+                window.scriptCompleted = true;
+                return;
             }
-        }, randomDelay(300, 550));
+
+            var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
+            var video = videos[videoIndex];
+            video.querySelector('#primary button[aria-label="Action menu"]').click();
+
+            setTimeout(function() {
+                var saveButton = document.evaluate(
+                    '//yt-formatted-string[contains(text(),"Save to playlist")]',
+                    document,
+                    null,
+                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    null
+                ).singleNodeValue;
+
+                if (saveButton) {
+                    saveButton.click();
+
+                    setTimeout(function() {
+                        var tempPlaylistButton = document.evaluate(
+                            '//yt-formatted-string[contains(text(),"Temp Playlist")]/ancestor::tp-yt-paper-checkbox',
+                            document,
+                            null,
+                            XPathResult.FIRST_ORDERED_NODE_TYPE,
+                            null
+                        ).singleNodeValue;
+
+                        if (tempPlaylistButton) {
+                            tempPlaylistButton.click();
+
+                            setTimeout(function() {
+                                var exitButton = document.querySelector('button[aria-label="Cancel"]');
+                                if (exitButton) {
+                                    exitButton.click();
+                                    videoIndex--;
+                                    addVideosToTemp();
+                                } else {
+                                    console.log('Exit button not found');
+                                }
+                            }, randomDelay(300, 550));
+                        } else {
+                            console.log('Temp Playlist button not found');
+                        }
+                    }, randomDelay(300, 550));
+                } else {
+                    console.log('Save to playlist button not found');
+                }
+            }, randomDelay(300, 550));
+        }
+
+        findStartingPoint();
     }
 
-    findStartingPoint();  // Start the first function
+    processVideos();
     """
 
     # Execute the JavaScript code
@@ -167,7 +198,7 @@ def add_watchlater_to_temp():
             break
     driver.quit()
 
-def deselect_cooking_videos():
+def deselect_cooking_and_podcast_videos():
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
@@ -190,84 +221,125 @@ def deselect_cooking_videos():
 
     # Here's your JavaScript code as a multi-line string
     js_code = """
-    var videoIndex = 0;
-    var cookingVideosRemoved = 0;
-
     function randomDelay(min, max) {
-    return Math.random() * (max - min) + min;
+        return Math.random() * (max - min) + min;
     }
+
+    function scrollToBottom() {
+        return new Promise((resolve) => {
+            let lastHeight = document.documentElement.scrollHeight;
+            let scrollAttempts = 0;
+            const maxScrollAttempts = 100; // Adjust this value if needed
+
+            function scroll() {
+                window.scrollTo(0, document.documentElement.scrollHeight);
+                setTimeout(() => {
+                    let newHeight = document.documentElement.scrollHeight;
+                    if (newHeight === lastHeight || scrollAttempts >= maxScrollAttempts) {
+                        resolve();
+                    } else {
+                        lastHeight = newHeight;
+                        scrollAttempts++;
+                        scroll();
+                    }
+                }, randomDelay(1000, 2000)); // Adjust delay as needed
+            }
+
+            scroll();
+        });
+    }
+
+    async function processVideos() {
+        await scrollToBottom();
+        console.log("Finished scrolling, all videos should be loaded.");
+
+        deselectWatchLater();
+    }
+
+    var videoIndex = 0;
+    var videosRemoved = 0;
 
     function deselectWatchLater() {
-    var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
-    if (videoIndex >= videos.length) {
-        console.log('All videos processed');
-        console.log('Total cooking videos removed from Watch Later:', cookingVideosRemoved);
-        return;
-    }
-    var video = videos[videoIndex];
-    video.querySelector('#primary button[aria-label="Action menu"]').click();
-    setTimeout(() => {
-        var saveButton = document.evaluate(
-        '//yt-formatted-string[contains(text(),"Save to playlist")]',
-        document,
-        null,
-        XPathResult.FIRST_ORDERED_NODE_TYPE,
-        null
-        ).singleNodeValue;
-        if (saveButton) {
-        saveButton.click();
-        setTimeout(() => {
-            var cookingPlaylistCheckbox = document.evaluate(
-            '//yt-formatted-string[contains(text(),"Cooking")]/ancestor::tp-yt-paper-checkbox',
-            document,
-            null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null
-            ).singleNodeValue;
-            if (cookingPlaylistCheckbox && cookingPlaylistCheckbox.getAttribute('aria-checked') === 'true') {
-            var watchLaterCheckbox = document.querySelector('ytd-playlist-add-to-option-renderer tp-yt-paper-checkbox[checked] #label[title="Watch later"]');
-            if (watchLaterCheckbox) {
-                watchLaterCheckbox.click();
-                console.log('Cooking video removed from Watch Later at index:', videoIndex);
-                cookingVideosRemoved++;
-                setTimeout(() => {
-                var closeButton = document.querySelector('yt-icon-button[icon="close"], button[aria-label="Close"]');
-                if (!closeButton) {
-                    closeButton = document.querySelector('button[aria-label="Cancel"]');
-                }
-                if (closeButton) {
-                    closeButton.click();
-                }
-                videoIndex++;
-                setTimeout(deselectWatchLater, randomDelay(1000, 2000)); // Process next video after a delay
-                }, randomDelay(500, 1500)); // Wait for the checkbox interaction
-            } else {
-                closeSaveMenuAndProceed();
-            }
-            } else {
-            closeSaveMenuAndProceed();
-            }
-        }, randomDelay(1000, 2000));
-        } else {
-        videoIndex++;
-        deselectWatchLater();
+        var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
+        if (videoIndex >= videos.length) {
+            console.log('All videos processed');
+            console.log('Total videos removed from Watch Later:', videosRemoved);
+            window.scriptCompleted = true;
+            return;
         }
-    }, randomDelay(500, 1000));
+        var video = videos[videoIndex];
+        video.querySelector('#primary button[aria-label="Action menu"]').click();
+        setTimeout(() => {
+            var saveButton = document.evaluate(
+                '//yt-formatted-string[contains(text(),"Save to playlist")]',
+                document,
+                null,
+                XPathResult.FIRST_ORDERED_NODE_TYPE,
+                null
+            ).singleNodeValue;
+            if (saveButton) {
+                saveButton.click();
+                setTimeout(() => {
+                    var cookingPlaylistCheckbox = document.evaluate(
+                        '//yt-formatted-string[contains(text(),"Cooking")]/ancestor::tp-yt-paper-checkbox',
+                        document,
+                        null,
+                        XPathResult.FIRST_ORDERED_NODE_TYPE,
+                        null
+                    ).singleNodeValue;
+                    var podcastPlaylistCheckbox = document.evaluate(
+                        '//yt-formatted-string[contains(text(),"Podcast/Comedy")]/ancestor::tp-yt-paper-checkbox',
+                        document,
+                        null,
+                        XPathResult.FIRST_ORDERED_NODE_TYPE,
+                        null
+                    ).singleNodeValue;
+                    
+                    if ((cookingPlaylistCheckbox && cookingPlaylistCheckbox.getAttribute('aria-checked') === 'true') ||
+                        (podcastPlaylistCheckbox && podcastPlaylistCheckbox.getAttribute('aria-checked') === 'true')) {
+                        var watchLaterCheckbox = document.querySelector('ytd-playlist-add-to-option-renderer tp-yt-paper-checkbox[checked] #label[title="Watch later"]');
+                        if (watchLaterCheckbox) {
+                            watchLaterCheckbox.click();
+                            console.log('Video removed from Watch Later at index:', videoIndex);
+                            videosRemoved++;
+                            setTimeout(() => {
+                                var closeButton = document.querySelector('yt-icon-button[icon="close"], button[aria-label="Close"]');
+                                if (!closeButton) {
+                                    closeButton = document.querySelector('button[aria-label="Cancel"]');
+                                }
+                                if (closeButton) {
+                                    closeButton.click();
+                                }
+                                videoIndex++;
+                                setTimeout(deselectWatchLater, randomDelay(300, 550)); // Updated delay
+                            }, randomDelay(300, 550)); // Updated delay
+                        } else {
+                            closeSaveMenuAndProceed();
+                        }
+                    } else {
+                        closeSaveMenuAndProceed();
+                    }
+                }, randomDelay(300, 550)); // Updated delay
+            } else {
+                videoIndex++;
+                deselectWatchLater();
+            }
+        }, randomDelay(300, 550)); // Updated delay
     }
 
     function closeSaveMenuAndProceed() {
-    var closeButton = document.querySelector('yt-icon-button[icon="close"], button[aria-label="Close"]');
-    if (!closeButton) {
-        closeButton = document.querySelector('button[aria-label="Cancel"]');
-    }
-    if (closeButton) {
-        closeButton.click();
-    }
-    videoIndex++;
-    setTimeout(deselectWatchLater, randomDelay(1000, 2000)); // Proceed to next video after a delay
+        var closeButton = document.querySelector('yt-icon-button[icon="close"], button[aria-label="Close"]');
+        if (!closeButton) {
+            closeButton = document.querySelector('button[aria-label="Cancel"]');
+        }
+        if (closeButton) {
+            closeButton.click();
+        }
+        videoIndex++;
+        setTimeout(deselectWatchLater, randomDelay(300, 550)); // Updated delay
     }
 
-    deselectWatchLater(); // Start the script
+    processVideos(); // Start the script
     """
 
     # Execute the JavaScript code
