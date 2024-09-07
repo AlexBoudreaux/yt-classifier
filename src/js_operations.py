@@ -258,11 +258,12 @@ def deselect_cooking_and_podcast_videos():
 
     var videoIndex = 0;
     var videosRemoved = 0;
+    var consecutiveNonMatches = 0;  // New variable to track consecutive non-matches
 
     function deselectWatchLater() {
         var videos = document.getElementsByTagName('ytd-playlist-video-renderer');
-        if (videoIndex >= videos.length) {
-            console.log('All videos processed');
+        if (videoIndex >= videos.length || consecutiveNonMatches >= 20) {
+            console.log('All videos processed or 20 consecutive non-matches reached');
             console.log('Total videos removed from Watch Later:', videosRemoved);
             window.scriptCompleted = true;
             return;
@@ -302,6 +303,7 @@ def deselect_cooking_and_podcast_videos():
                             watchLaterCheckbox.click();
                             console.log('Video removed from Watch Later at index:', videoIndex);
                             videosRemoved++;
+                            consecutiveNonMatches = 0;  // Reset consecutive non-matches
                             setTimeout(() => {
                                 var closeButton = document.querySelector('yt-icon-button[icon="close"], button[aria-label="Close"]');
                                 if (!closeButton) {
@@ -311,20 +313,21 @@ def deselect_cooking_and_podcast_videos():
                                     closeButton.click();
                                 }
                                 videoIndex++;
-                                setTimeout(deselectWatchLater, randomDelay(300, 550)); // Updated delay
-                            }, randomDelay(300, 550)); // Updated delay
+                                setTimeout(deselectWatchLater, randomDelay(300, 550));
+                            }, randomDelay(300, 550));
                         } else {
                             closeSaveMenuAndProceed();
                         }
                     } else {
+                        consecutiveNonMatches++;  // Increment consecutive non-matches
                         closeSaveMenuAndProceed();
                     }
-                }, randomDelay(300, 550)); // Updated delay
+                }, randomDelay(300, 550));
             } else {
                 videoIndex++;
                 deselectWatchLater();
             }
-        }, randomDelay(300, 550)); // Updated delay
+        }, randomDelay(300, 550));
     }
 
     function closeSaveMenuAndProceed() {
@@ -336,7 +339,7 @@ def deselect_cooking_and_podcast_videos():
             closeButton.click();
         }
         videoIndex++;
-        setTimeout(deselectWatchLater, randomDelay(300, 550)); // Updated delay
+        setTimeout(deselectWatchLater, randomDelay(300, 550));
     }
 
     processVideos(); // Start the script
