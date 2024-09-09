@@ -228,6 +228,7 @@ python misc_src/test_single_video.py
 - If you encounter authentication issues, ensure your `token.json` file is up to date.
 - For Selenium issues, make sure you have the correct ChromeDriver version installed.
 - Check the `video_processing.log` file for detailed error messages.
+- All tokens, keys and creds can be found in my Google Drive at: [Google Drive Folder](https://drive.google.com/drive/u/0/folders/1LU-9b3goAsTC7Myj92tMJldeXhirgEdU)
 
 ## Contributing
 
