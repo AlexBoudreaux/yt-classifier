@@ -104,6 +104,63 @@ The system flows as follows:
    pip install -r requirements.txt
    ```
 
+6. Set up auto-start on boot:
+   - Create a systemd service file:
+     ```
+     sudo nano /etc/systemd/system/youtube-organizer.service
+     ```
+   - Add the following content (adjust paths as needed):
+     ```
+     [Unit]
+     Description=YouTube Video Organizer
+     After=network.target
+
+     [Service]
+     ExecStart=/home/pi/youtube-video-organizer/venv/bin/python /home/pi/youtube-video-organizer/src/main.py
+     WorkingDirectory=/home/pi/youtube-video-organizer
+     StandardOutput=inherit
+     StandardError=inherit
+     Restart=always
+     User=pi
+
+     [Install]
+     WantedBy=multi-user.target
+     ```
+   - Save and exit (Ctrl+X, Y, Enter)
+   - Enable and start the service:
+     ```
+     sudo systemctl enable youtube-organizer.service
+     sudo systemctl start youtube-organizer.service
+     ```
+
+7. Set up log rotation:
+   - Create a logrotate configuration file:
+     ```
+     sudo nano /etc/logrotate.d/youtube-organizer
+     ```
+   - Add the following content:
+     ```
+     /home/pi/youtube-video-organizer/video_processing.log {
+         rotate 7
+         daily
+         compress
+         missingok
+         notifempty
+     }
+     ```
+   - Save and exit (Ctrl+X, Y, Enter)
+
+8. Configure automatic updates:
+   - Open the crontab file:
+     ```
+     crontab -e
+     ```
+   - Add the following line to update and upgrade weekly:
+     ```
+     0 2 * * 0 sudo apt update && sudo apt upgrade -y
+     ```
+   - Save and exit (Ctrl+X, Y, Enter)
+
 ## Obtaining Credentials
 
 ### YouTube API
@@ -152,11 +209,12 @@ To run the application:
 python src/main.py
 ```
 
+For Raspberry Pi, the application should start automatically on boot due to the systemd service we set up. To manually control the service:
 
-For Raspberry Pi, you might want to set up a systemd service to run the application automatically:
-
-> **Warning**
-> This section is currently a work in progress (WIP).
+- Start: `sudo systemctl start youtube-organizer.service`
+- Stop: `sudo systemctl stop youtube-organizer.service`
+- Restart: `sudo systemctl restart youtube-organizer.service`
+- Check status: `sudo systemctl status youtube-organizer.service`
 
 ## Testing
 
