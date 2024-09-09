@@ -55,8 +55,8 @@ The system flows as follows:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/youtube-video-organizer.git
-   cd youtube-video-organizer
+   git clone https://github.com/AlexBoudreaux/yt-classifier.git
+   cd yt-classifier
    ```
 
 2. Create a virtual environment:
@@ -70,12 +70,17 @@ The system flows as follows:
    pip install -r requirements.txt
    ```
 
-4. Install ChromeDriver:
+4. Install ChromeDriver if chrome is not installed:
    ```
    brew install --cask chromedriver
    ```
 
 ### Raspberry Pi Setup
+
+
+NOTES: 
+
+NEED TO UPDATE THIS WHOLE PART OF THE README
 
 1. Update and upgrade your Raspberry Pi:
    ```
@@ -84,13 +89,13 @@ The system flows as follows:
 
 2. Install required packages:
    ```
-   sudo apt install -y python3-pip python3-venv chromium-chromedriver
+   sudo apt install -y python3-pip python3-venv chromium-chromedriver chromium-browser
    ```
 
 3. Clone the repository:
    ```
-   git clone https://github.com/yourusername/youtube-video-organizer.git
-   cd youtube-video-organizer
+   git clone https://github.com/AlexBoudreaux/yt-classifier.git
+   cd yt-classifier
    ```
 
 4. Create a virtual environment:
@@ -104,62 +109,69 @@ The system flows as follows:
    pip install -r requirements.txt
    ```
 
-6. Set up auto-start on boot:
-   - Create a systemd service file:
-     ```
-     sudo nano /etc/systemd/system/youtube-organizer.service
-     ```
-   - Add the following content (adjust paths as needed):
-     ```
-     [Unit]
-     Description=YouTube Video Organizer
-     After=network.target
+6. Open Chromium and sign in to YouTube:
+   ```
+   chromium-browser
+   ```
 
-     [Service]
-     ExecStart=/home/pi/youtube-video-organizer/venv/bin/python /home/pi/youtube-video-organizer/src/main.py
-     WorkingDirectory=/home/pi/youtube-video-organizer
-     StandardOutput=inherit
-     StandardError=inherit
-     Restart=always
-     User=pi
+7. Set up Cron Job:
+   ```
+   chmod +x home/alexboudreaux19/yt-classifier/src/main.py
+   ```
+  
+   ```
+   sudo crontab -e
+   ```
 
-     [Install]
-     WantedBy=multi-user.target
-     ```
-   - Save and exit (Ctrl+X, Y, Enter)
-   - Enable and start the service:
-     ```
-     sudo systemctl enable youtube-organizer.service
-     sudo systemctl start youtube-organizer.service
-     ```
+   Add the following line to run the script at 10:00 PM every day:
+   ```
+   0 0-23/2 * * * /bin/bash -c 'source /home/alexboudreaux19/yt-classifier/venv/bin/activate && /usr/bin/python3 /home/alexboudreaux19/yt-classifier/src/main.py'
+   ```
 
-7. Set up log rotation:
-   - Create a logrotate configuration file:
-     ```
-     sudo nano /etc/logrotate.d/youtube-organizer
-     ```
-   - Add the following content:
-     ```
-     /home/pi/youtube-video-organizer/video_processing.log {
-         rotate 7
-         daily
-         compress
-         missingok
-         notifempty
-     }
-     ```
-   - Save and exit (Ctrl+X, Y, Enter)
 
-8. Configure automatic updates:
-   - Open the crontab file:
-     ```
-     crontab -e
-     ```
-   - Add the following line to update and upgrade weekly:
-     ```
-     0 2 * * 0 sudo apt update && sudo apt upgrade -y
-     ```
-   - Save and exit (Ctrl+X, Y, Enter)
+8. Enable Watchdog Timer:
+   ```
+   sudo apt install watchdog -y
+   sudo nano /etc/watchdog.conf
+   ```
+   Uncomment these lines in the file:
+   ```
+   watchdog-device = /dev/watchdog
+   max-load-1 = 24
+   ```
+   Then enable and start the watchdog service:
+   ```
+   sudo systemctl enable watchdog
+   sudo systemctl start watchdog
+   ```
+
+9. Set up Automatic Reboots on Network Loss:
+   Create a network check script:
+   ```
+   nano /home/pi/check_internet.sh
+   ```
+   Add this content to the file:
+   ```
+   #!/bin/bash
+
+   ping -c 1 google.com > /dev/null 2>&1
+   if [ $? -ne 0 ]; then
+       sudo reboot
+   fi
+   ```
+   Make the script executable:
+   ```
+   chmod +x /home/pi/check_internet.sh
+   ```
+   Add it to the crontab to check every 5 minutes:
+   ```
+   crontab -e
+   ```
+   Add this line to the crontab file:
+   ```
+   */5 * * * * /home/pi/check_internet.sh
+   ```
+
 
 ## Obtaining Credentials
 
