@@ -155,9 +155,8 @@ python src/main.py
 
 For Raspberry Pi, you might want to set up a systemd service to run the application automatically:
 
-```
-WIP
-```
+> **Warning**
+> This section is currently a work in progress (WIP).
 
 ## Testing
 
